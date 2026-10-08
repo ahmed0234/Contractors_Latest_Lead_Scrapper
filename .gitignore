@@ -1,0 +1,80 @@
+# ==============================================================================
+# Git Ignore - Contractor Lead-Generation Engine
+# ==============================================================================
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment Variables & Secrets (Keep .env.example tracked)
+.env
+.env.*
+*.env
+!.env.example
+
+# Databases & Local SQLite / DuckDB storage
+*.db
+*.sqlite
+*.sqlite3
+*.duckdb
+*.duckdb.wal
+data/*.db
+data/*.duckdb
+
+# Generated Data, CSV Exports & Scraper Caches
+*.csv
+*.tsv
+*.parquet
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/output/*
+!data/output/.gitkeep
+data/cache/*
+!data/cache/.gitkeep
+
+# Application and System Logs
+logs/*
+!logs/.gitkeep
+*.log
+
+# Scratchpad & Temporary Exploration Scripts
+scratch/
+
+# Testing & Coverage reports
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# Linters, Formatters & Type-checker caches
+.ruff_cache/
+.mypy_cache/
+.cache/
+
+# Distribution & Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# IDE & OS-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
