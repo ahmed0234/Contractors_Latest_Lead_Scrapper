@@ -57,6 +57,10 @@ class SunbizRecordParser(BaseParser):
         metadata = {
             "status": status,
             "filing_type": filing_type,
+            "address1": addr1,
+            "address2": addr2,
+            "street_address": full_address,
+            "zip": zip_code,
             "zip_code": zip_code,
             "file_date": file_date_raw,
             "filing_year": filing_year,

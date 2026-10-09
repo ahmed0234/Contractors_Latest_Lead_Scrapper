@@ -79,6 +79,14 @@ def test_other_category_classifiers() -> None:
     assert landscaping.evaluate("Evergreen Landscaping & Lawn Care").is_match is True
     assert landscaping.evaluate("Landscaping Equipment Wholesale").is_match is False
 
+    mattress = get_classifier("mattress")
+    assert mattress.evaluate("Sleep Center Mattress Store LLC").is_match is True
+    assert mattress.evaluate("Mattress Freight & Moving Co").is_match is False
+
+    spa = get_classifier("spa")
+    assert spa.evaluate("Tranquil Day Spa & Wellness LLC").is_match is True
+    assert spa.evaluate("Hot Tub & Spa Parts Wholesale Supply").is_match is False
+
 
 def test_unsupported_category_rejection() -> None:
     """Verify invalid category names raise ValueError with helpful options."""

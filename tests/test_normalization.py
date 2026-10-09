@@ -93,3 +93,21 @@ def test_default_company_normalizer_rejects_missing_city_or_state() -> None:
         raw_state="Texas",
     )
     assert normalizer.normalize(raw) is None
+
+
+def test_default_company_normalizer_preserves_address_and_zip() -> None:
+    """Verify normalizer maps street_address and zip_code correctly."""
+    normalizer = DefaultCompanyNormalizer()
+    raw = ParsedCompanyRecord(
+        source_name="florida_sunbiz",
+        source_record_id="P240001",
+        raw_name="Apex Roofing LLC",
+        raw_city="Tampa",
+        raw_state="FL",
+        raw_address="123 Palm Ave",
+        raw_metadata={"zip_code": "33602"},
+    )
+    result = normalizer.normalize(raw)
+    assert result is not None
+    assert result.street_address == "123 Palm Ave"
+    assert result.zip_code == "33602"

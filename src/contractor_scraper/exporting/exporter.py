@@ -55,16 +55,68 @@ class LeadExporter:
         return pl.DataFrame(data)
 
     def export_to_csv(self, leads: list[FinalLead], output_path: Path) -> Path:
-        """Export leads to CSV with exactly the five mandatory columns."""
+        """Export leads to CSV atomically using temporary file to prevent corruption on interruption."""
+        import os
+
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        temp_path = output_path.with_name(f".tmp_{output_path.name}")
 
         try:
             df = self.to_polars_dataframe(leads)
-            df.write_csv(output_path)
+            df.write_csv(temp_path)
+            # Atomic filesystem replacement
+            os.replace(temp_path, output_path)
             return output_path
         except Exception as exc:
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except OSError:
+                    pass
             raise StorageError(f"Failed to export leads to CSV '{output_path}': {exc}") from exc
+
+    def export_to_csv_atomic(self, leads: list[FinalLead], output_path: Path) -> Path:
+        """Explicit alias for atomic CSV export."""
+        return self.export_to_csv(leads, output_path)
+
+    @staticmethod
+    def load_existing_leads_from_csv(csv_path: Path) -> list[FinalLead]:
+        """Load previously saved leads from disk to support seamless resumes."""
+        if not csv_path.exists() or csv_path.stat().st_size == 0:
+            return []
+
+        try:
+            df = pl.read_csv(csv_path, infer_schema_length=1000)
+            if df.is_empty():
+                return []
+
+            leads: list[FinalLead] = []
+            for row in df.iter_rows(named=True):
+                company_name = str(row.get("Company Name") or "").strip()
+                city = str(row.get("City") or "").strip()
+                state = str(row.get("State") or "FL").strip()
+                if not company_name or not city:
+                    continue
+
+                leads.append(
+                    FinalLead(
+                        company_name=company_name,
+                        website=str(row.get("Website") or "").strip(),
+                        email=str(row.get("Email") or "").strip(),
+                        city=city,
+                        state=state,
+                        formation_date=str(row.get("Formation Date") or "").strip(),
+                        document_number=str(row.get("Document Number") or "").strip(),
+                        company_status=str(row.get("Company Status") or "Active").strip(),
+                        street_address=str(row.get("Street Address") or "").strip(),
+                        zip_code=str(row.get("ZIP Code") or "").strip(),
+                        industry=str(row.get("Industry") or "").strip(),
+                    )
+                )
+            return leads
+        except Exception:
+            return []
 
     def export_to_parquet(self, leads: list[FinalLead], output_path: Path) -> Path:
         """Export leads to high-compression Parquet format using Polars."""

@@ -20,6 +20,11 @@ class ParsedCompanyRecord:
     raw_address: str | None = None
     raw_metadata: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def corporate_number(self) -> str:
+        """Alias for source_record_id representing the corporate/document number."""
+        return self.source_record_id
+
 
 class BaseParser(ABC):
     """Abstract base class for extracting standardized company records from raw payloads."""

@@ -153,23 +153,31 @@ The primary command line interface is `contractor-scraper`.
 ### Running the Lead Engine
 
 ```bash
-# 1. Generate verified roofing contractor leads for year 2025 (target limit: 10,000)
+# 1. Generate verified roofing contractor leads (shortcut flag)
+python scraper.py --limit 2000 --roofing
+
+# 2. Or using standard arguments:
 python scraper.py --year 2025 --keyword roofing --limit 10000
 
-# 2. Target 2024 HVAC contractors with limit 5,000
+# 3. Target 2024 HVAC contractors with limit 5,000
 python scraper.py --year 2024 --keyword hvac --limit 5000
 
-# 3. Target 2025 Plumbing contractors with limit 2,500
+# 4. Target 2025 Plumbing contractors with limit 2,500
 python scraper.py --year 2025 --keyword plumbing --limit 2500
 
-# 4. Sampling / Testing run on 1 Sunbiz filing file
+# 5. Sampling / Testing run on 1 Sunbiz filing file
 python scraper.py --year 2025 --keyword roofing --limit 10 --max-files 1
 ```
 
 All commands can also be run via the CLI script:
 ```bash
-contractor-scraper --year 2025 --keyword roofing --limit 10000
+contractor-scraper --limit 2000 --roofing
 ```
+
+> **Production Safeguards**:
+> - **Continuous Atomic Checkpointing**: Discovered leads are immediately written to disk using atomic file replacements. If you pause the run (`Ctrl+C`) or your network connection drops, 100% of previously found leads remain safe.
+> - **Anti-Stall Hard Timeouts**: The scraper enforces hard per-request and per-company timeouts (30s max total per company). An unresponsive or slow contractor site is recorded and skipped immediately—the scraper will never freeze.
+> - **Seamless Restartability**: When resuming a run, already discovered and exported companies are automatically detected and skipped, continuing toward your target limit without duplicated work.
 
 ### Supported Categories & Keyword Aliases
 - `roofing` (aliases: `roof`, `roofer`, `roofers`)

@@ -59,6 +59,18 @@ class Settings(BaseSettings):
         default=DEFAULT_USER_AGENT,
         description="HTTP User-Agent header for public data acquisition",
     )
+    company_enrichment_timeout_seconds: float = Field(
+        default=30.0,
+        gt=5.0,
+        le=180.0,
+        description="Hard maximum timeout for enriching an individual company before moving on",
+    )
+    checkpoint_frequency: int = Field(
+        default=1,
+        ge=1,
+        le=100,
+        description="Flush leads to disk every N production leads discovered",
+    )
 
     # --- Search Engine & Enrichment API Settings ---
     google_search_api_key: str | None = Field(

@@ -30,13 +30,33 @@ def main_callback(
         None,
         "--category",
         "-c",
-        help="Contractor category (e.g. roofing, hvac, plumbing, landscaping, hardscaping, remodeling, pest-control, med-spa)",
+        help="Contractor category (e.g. roofing, hvac, plumbing, landscaping, hardscaping, remodeling, pest-control, med-spa, mattress, spa)",
     ),
     keyword: str | None = typer.Option(
         None,
         "--keyword",
         "-k",
         help="Contractor category/keyword alias (e.g. roofing, hvac, plumbing)",
+    ),
+    roofing: bool = typer.Option(
+        False,
+        "--roofing",
+        help="Direct shortcut to target Roofing contractors",
+    ),
+    hvac: bool = typer.Option(
+        False,
+        "--hvac",
+        help="Direct shortcut to target HVAC contractors",
+    ),
+    plumbing: bool = typer.Option(
+        False,
+        "--plumbing",
+        help="Direct shortcut to target Plumbing contractors",
+    ),
+    landscaping: bool = typer.Option(
+        False,
+        "--landscaping",
+        help="Direct shortcut to target Landscaping contractors",
     ),
     limit: int = typer.Option(
         10000,
@@ -53,6 +73,16 @@ def main_callback(
     """Invoked when no subcommand is given. Executes engine or defaults to interactive prompts."""
     if ctx.invoked_subcommand is None:
         target_category = category or keyword
+        if not target_category:
+            if roofing:
+                target_category = "roofing"
+            elif hvac:
+                target_category = "hvac"
+            elif plumbing:
+                target_category = "plumbing"
+            elif landscaping:
+                target_category = "landscaping"
+
         execute_engine_cli(
             year=year,
             category=target_category,
@@ -76,13 +106,33 @@ def run_command(
         None,
         "--category",
         "-c",
-        help="Contractor category (e.g. roofing, hvac, plumbing, landscaping, hardscaping, remodeling, pest-control, med-spa)",
+        help="Contractor category (e.g. roofing, hvac, plumbing, landscaping, hardscaping, remodeling, pest-control, med-spa, mattress, spa)",
     ),
     keyword: str | None = typer.Option(
         None,
         "--keyword",
         "-k",
         help="Contractor category/keyword alias (e.g. roofing, hvac, plumbing)",
+    ),
+    roofing: bool = typer.Option(
+        False,
+        "--roofing",
+        help="Direct shortcut to target Roofing contractors",
+    ),
+    hvac: bool = typer.Option(
+        False,
+        "--hvac",
+        help="Direct shortcut to target HVAC contractors",
+    ),
+    plumbing: bool = typer.Option(
+        False,
+        "--plumbing",
+        help="Direct shortcut to target Plumbing contractors",
+    ),
+    landscaping: bool = typer.Option(
+        False,
+        "--landscaping",
+        help="Direct shortcut to target Landscaping contractors",
     ),
     limit: int = typer.Option(
         10000,
@@ -97,6 +147,16 @@ def run_command(
     ),
 ) -> None:
     target_category = category or keyword
+    if not target_category:
+        if roofing:
+            target_category = "roofing"
+        elif hvac:
+            target_category = "hvac"
+        elif plumbing:
+            target_category = "plumbing"
+        elif landscaping:
+            target_category = "landscaping"
+
     execute_engine_cli(
         year=year,
         category=target_category,

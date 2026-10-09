@@ -27,6 +27,8 @@ SUPPORTED_CATEGORIES: list[str] = [
     "remodeling",
     "pest-control",
     "med-spa",
+    "mattress",
+    "spa",
 ]
 
 
@@ -79,25 +81,44 @@ def prompt_contractor_category() -> str:
         )
 
 
-def prompt_year() -> int:
-    """Interactively prompt for filing year."""
-    current_year = datetime.now().year
+def prompt_year() -> int | None:
+    """Interactively prompt for filing year, allowing default auto multi-year."""
+    current_year = max(2026, datetime.now().year)
     while True:
         year_input = Prompt.ask(
-            "[bold yellow]What Sunbiz filing year do you want?[/bold yellow]",
-            default="2025",
+            f"[bold yellow]What Sunbiz filing year do you want? (Press Enter for auto multi-year {current_year}->2016)[/bold yellow]",
+            default="auto",
         ).strip()
+
+        if year_input.lower() in ("auto", "all", "", "none"):
+            return None
 
         if year_input.isdigit():
             val = int(year_input)
             if 1990 <= val <= current_year + 1:
                 return val
 
-        console.print("[red]Please enter a valid four-digit year (e.g. 2025).[/red]")
+        console.print(f"[red]Please enter a valid year between 1990 and {current_year + 1}, or press Enter for auto.[/red]")
 
 
 def print_final_run_summary(telemetry: EngineRunTelemetry) -> None:
     """Print the final run execution summary table according to system requirements."""
+    web_rate = (
+        (telemetry.websites_verified / telemetry.category_candidates * 100)
+        if telemetry.category_candidates > 0
+        else 0.0
+    )
+    email_rate = (
+        (telemetry.emails_discovered / telemetry.websites_verified * 100)
+        if telemetry.websites_verified > 0
+        else 0.0
+    )
+    prod_rate = (
+        (telemetry.final_complete_leads / telemetry.category_candidates * 100)
+        if telemetry.category_candidates > 0
+        else 0.0
+    )
+
     summary_table = Table(
         title="Execution Summary & Lead Telemetry",
         header_style="bold white on blue",
@@ -114,9 +135,15 @@ def print_final_run_summary(telemetry: EngineRunTelemetry) -> None:
     summary_table.add_row("Website Candidates Discovered", f"{telemetry.websites_discovered:,}")
     summary_table.add_row("Websites Verified", f"{telemetry.websites_verified:,}")
     summary_table.add_row("Emails Discovered", f"{telemetry.emails_discovered:,}")
+    summary_table.add_row("Website Discovery & Verification Rate", f"{web_rate:.1f}%")
+    summary_table.add_row("Email Discovery Rate", f"{email_rate:.1f}%")
     summary_table.add_row(
-        "Production Leads (Complete Contact)",
+        "Production Leads Generated",
         f"[bold green]{telemetry.final_complete_leads:,}[/bold green]",
+    )
+    summary_table.add_row(
+        "Production Lead Conversion Rate",
+        f"[bold green]{prod_rate:.1f}%[/bold green]",
     )
     summary_table.add_row(
         "Leads Missing Contact (Research List)",
@@ -165,20 +192,10 @@ def execute_engine_cli(
         )
     )
 
-    # 1. Validate & resolve year
-    if year is None:
-        selected_year = prompt_year()
-    else:
-        if year < 1990 or year > 2030:
-            console.print(
-                f"[bold red]Error: Invalid year {year}. Must be between 1990 and 2030.[/bold red]"
-            )
-            raise SystemExit(1)
-        selected_year = year
-
-    # 2. Validate & resolve category
+    # 1. Validate & resolve category
     if category is None:
         selected_category = prompt_contractor_category()
+        is_interactive = True
     else:
         norm_cat = category.strip().lower().replace("_", "-")
         try:
@@ -190,6 +207,21 @@ def execute_engine_cli(
                 f"Supported categories are: [yellow]{', '.join(SUPPORTED_CATEGORIES)}[/yellow]"
             )
             raise SystemExit(1) from None
+        is_interactive = False
+
+    # 2. Validate & resolve year
+    if year is not None:
+        if year < 1990 or year > 2030:
+            console.print(
+                f"[bold red]Error: Invalid year {year}. Must be between 1990 and 2030.[/bold red]"
+            )
+            raise SystemExit(1)
+        selected_year = year
+    elif is_interactive:
+        selected_year = prompt_year()
+    else:
+        # Flags specified without --year: default to auto multi-year
+        selected_year = None
 
     # 3. Validate limit
     if limit <= 0:
@@ -198,9 +230,14 @@ def execute_engine_cli(
         )
         raise SystemExit(1)
 
+    if selected_year is not None:
+        year_display = f"Year: {selected_year}"
+    else:
+        year_display = "Auto Multi-Year: 2026 -> 2016"
+
     console.print(
         f"[green]Starting lead generation engine for[/green] [bold cyan]{selected_category.title()}[/bold cyan] "
-        f"[green](Year: {selected_year}, Target Limit: {limit:,})[/green]..."
+        f"[green]({year_display}, Target Limit: {limit:,})[/green]..."
     )
 
     engine = LeadEngine(concurrency_limit=settings.concurrency_limit)
@@ -217,7 +254,9 @@ def execute_engine_cli(
 
     except KeyboardInterrupt:
         console.print(
-            "[yellow]\nExecution paused by user. Processing state safely checkpointed in database.[/yellow]"
+            "\n[bold yellow]Execution safely paused by user (Ctrl+C).[/bold yellow]\n"
+            "[green]All collected leads have been safely flushed to the data/output/ CSV files and checkpointed.[/green]\n"
+            "[cyan]You can resume anytime with the same command without repeating already-saved leads.[/cyan]"
         )
     except Exception as exc:
         console.print(f"[bold red]Execution error: {exc}[/bold red]")

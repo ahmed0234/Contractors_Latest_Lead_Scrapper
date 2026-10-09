@@ -52,6 +52,8 @@ class WebsiteVerifier(BaseWebsiteVerifier):
         expected_state: str = "FL",
         expected_city: str | None = None,
         category: str = "roofing",
+        expected_street_address: str | None = None,
+        expected_zip_code: str | None = None,
     ) -> WebsiteVerificationResult:
         """Deep verification of candidate website against Florida entity details."""
         crawl = await self.crawler.crawl_domain(candidate.url)
@@ -68,6 +70,35 @@ class WebsiteVerifier(BaseWebsiteVerifier):
         text_lower = crawl.combined_text.lower()
         title_lower = crawl.homepage.title.lower() if crawl.homepage else ""
         checks: list[str] = []
+
+        # 0. Check for parked domain landers
+        parked_signals = [
+            "window.location.href='/lander'",
+            "buy this domain",
+            "domain is for sale",
+            "domain may be for sale",
+            "this domain is for sale",
+            "this domain is parked",
+            "hugedomains.com",
+            "dan.com",
+            "godaddy.com/domainsearch",
+            "afternic.com",
+            "parkingcrew",
+            "sedo.com",
+            "domain parked",
+            "renew your domain",
+            "namecheap.com/domains",
+            "parked domain",
+        ]
+        if any(sig in text_lower for sig in parked_signals):
+            return WebsiteVerificationResult(
+                url=candidate.url,
+                domain=candidate.domain,
+                status=WebsiteStatus.PARKED_DOMAIN,
+                is_verified=False,
+                confidence=0.0,
+                failure_reason="Parked or for-sale domain",
+            )
 
         # 1. Company Name Signal (weight: 0.35)
         clean_name = clean_company_name(expected_company_name).lower()
@@ -128,8 +159,27 @@ class WebsiteVerifier(BaseWebsiteVerifier):
             if city_clean and (
                 city_clean in text_lower or (title_lower and city_clean in title_lower)
             ):
-                geo_score += 0.5
+                geo_score = min(1.0, geo_score + 0.4)
                 checks.append(f"city_{city_clean}_match")
+
+        # Check ZIP code mentions
+        if expected_zip_code:
+            zip_5 = re.sub(r"\D", "", expected_zip_code)[:5]
+            if len(zip_5) == 5 and zip_5 in text_lower:
+                geo_score = min(1.0, geo_score + 0.3)
+                checks.append(f"zip_{zip_5}_match")
+
+        # Check Street Address mentions
+        if expected_street_address:
+            addr_tokens = [
+                t for t in re.split(r"[^a-z0-9]", expected_street_address.lower()) if len(t) >= 3
+            ]
+            addr_matched = [
+                t for t in addr_tokens if re.search(rf"\b{re.escape(t)}\b", text_lower)
+            ]
+            if addr_matched and len(addr_matched) >= 2:
+                geo_score = min(1.0, geo_score + 0.3)
+                checks.append("street_address_match")
 
         # 4. Category / Trade Signal (weight: 0.20)
         category_score = 0.0
@@ -153,9 +203,9 @@ class WebsiteVerifier(BaseWebsiteVerifier):
         )
 
         # Pragmatic verification threshold:
-        # Verified if composite confidence >= 0.55 and name_score >= 0.35,
+        # Verified if composite confidence >= 0.52 and name_score >= 0.35,
         # OR if domain has an exact distinctive brand match with state or category support
-        is_verified = (confidence >= 0.55 and name_score >= 0.35) or (
+        is_verified = (confidence >= 0.52 and name_score >= 0.35) or (
             domain_brand_match and (geo_score > 0 or category_score > 0)
         )
 

@@ -12,6 +12,8 @@ class ContractorCategory(StrEnum):
     REMODELING = "Remodeling"
     PEST_CONTROL = "Pest Control"
     MED_SPA = "Med Spa"
+    MATTRESS = "Mattress"
+    SPA = "Spa"
 
 
 class CompanyStatus(StrEnum):

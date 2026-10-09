@@ -1,5 +1,6 @@
 """Targeted, polite website crawler for business verification and contact extraction."""
 
+import asyncio
 import hashlib
 import html as html_lib
 import json
@@ -78,7 +79,7 @@ class WebsiteCrawler:
         self,
         cache_dir: Path | None = None,
         timeout_seconds: float = 8.0,
-        max_subpages: int = 3,
+        max_subpages: int = 5,
     ) -> None:
         self.settings = get_settings()
         self.cache_dir = cache_dir or (self.settings.cache_dir / "crawler")
@@ -130,14 +131,35 @@ class WebsiteCrawler:
         # Collapse whitespace
         body_text = " ".join(text.split()) + footer_text
 
-        # Extract href links
-        links = re.findall(r'href=["\']([^"\'#\s>]+)["\']', html, re.IGNORECASE)
+        # Extract href links and dynamically identify contact-related anchors by visible text
+        links: list[str] = []
+        for m in re.finditer(
+            r'<a\s+[^>]*href=["\']([^"\'#\s>]+)["\'][^>]*>(.*?)</a>',
+            html,
+            re.IGNORECASE | re.DOTALL,
+        ):
+            href = m.group(1).strip()
+            anchor_inner = re.sub(r"<[^>]+>", " ", m.group(2)).lower()
+            if any(
+                term in anchor_inner
+                for term in ["contact", "about", "touch", "reach", "location", "email"]
+            ):
+                links.insert(0, href)
+            else:
+                links.append(href)
+
+        # Append any remaining hrefs
+        all_hrefs = re.findall(r'href=["\']([^"\'#\s>]+)["\']', html, re.IGNORECASE)
+        for h in all_hrefs:
+            if h not in links:
+                links.append(h)
 
         return title, meta_desc, body_text, links
 
     def _extract_emails_and_phones(self, html: str, text: str) -> tuple[list[str], list[str]]:
-        """Extract potential email addresses and phone numbers from HTML, footers, and text."""
+        """Extract potential email addresses and phone numbers from HTML, footers, JSON-LD, and text."""
         raw_candidates: list[str] = []
+        unescaped_html = html_lib.unescape(html)
 
         # 1. Cloudflare protected emails (data-cfemail="...")
         cf_matches = re.findall(r'data-cfemail=["\']([0-9a-fA-F]+)["\']', html)
@@ -154,19 +176,28 @@ class WebsiteCrawler:
                 raw_candidates.append(dec)
 
         # 2. mailto: links (including unquoted and URL stripped)
-        mailto_matches = re.findall(r"mailto:\s*([^\"'#\s>]+)", html, re.IGNORECASE)
+        mailto_matches = re.findall(r"mailto:\s*([^\"'#\s>]+)", unescaped_html, re.IGNORECASE)
         for m in mailto_matches:
-            clean_m = urllib.parse.unquote(html_lib.unescape(m)).split("?")[0].strip()
+            clean_m = urllib.parse.unquote(m).split("?")[0].strip()
             for sub_e in re.split(r"[,;]", clean_m):
                 sub_e = sub_e.strip()
                 if EMAIL_REGEX.match(sub_e):
                     raw_candidates.append(sub_e)
 
-        # 3. Direct email regex on body text and unescaped HTML
-        raw_candidates.extend(EMAIL_REGEX.findall(text))
-        raw_candidates.extend(EMAIL_REGEX.findall(html_lib.unescape(html)))
+        # 3. JSON-LD schema markup
+        schema_emails = re.findall(
+            r'["\'](?:email|mail)["\']\s*:\s*["\']([^"\']+)["\']', html, re.IGNORECASE
+        )
+        for se in schema_emails:
+            clean_se = se.replace("mailto:", "").strip()
+            if EMAIL_REGEX.match(clean_se):
+                raw_candidates.append(clean_se)
 
-        # 4. Text-obfuscated emails (e.g. info [at] domain.com or info (at) domain.com)
+        # 4. Direct email regex on body text and unescaped HTML
+        raw_candidates.extend(EMAIL_REGEX.findall(text))
+        raw_candidates.extend(EMAIL_REGEX.findall(unescaped_html))
+
+        # 5. Text-obfuscated emails (e.g. info [at] domain.com or info (at) domain.com)
         obfuscated = re.findall(
             r"([a-zA-Z0-9._%+-]+)\s*(?:\[at\]|\(at\)|\[@\])\s*([a-zA-Z0-9.-]+)\s*(?:\[dot\]|\(dot\)|\.)\s*([a-zA-Z]{2,})",
             text,
@@ -175,14 +206,29 @@ class WebsiteCrawler:
         for user, dom, tld in obfuscated:
             raw_candidates.append(f"{user}@{dom}.{tld}")
 
-        # Filter false positives
+        # Filter false positives and dummy emails
+        dummy_domains = {
+            "example.com",
+            "domain.com",
+            "yourdomain.com",
+            "yourcompany.com",
+            "email.com",
+            "sentry.io",
+            "wixpress.com",
+            "wordpress.org",
+            "cloudflare.com",
+            "schema.org",
+            "gravatar.com",
+            "mysite.com",
+        }
+
         valid_emails = []
         for e in raw_candidates:
             lower_e = e.lower().strip()
             if "@" not in lower_e:
                 continue
             local_part, domain_part = lower_e.split("@", 1)
-            # Filter image or web asset false positives
+            # Filter asset extensions
             if any(
                 local_part.endswith(ext) or domain_part.endswith(ext)
                 for ext in [
@@ -203,13 +249,18 @@ class WebsiteCrawler:
                 continue
             if "." not in domain_part or len(domain_part) < 4:
                 continue
+            if domain_part in dummy_domains or any(d in domain_part for d in dummy_domains):
+                continue
             valid_emails.append(lower_e)
 
-        # 5. Extract phones (tel: links + regex)
-        tel_matches = re.findall(r"tel:\s*([^\"'#\s>]+)", html, re.IGNORECASE)
+        # 6. Extract phones (tel: links + schema + regex)
+        tel_matches = re.findall(r"tel:\s*([^\"'#\s>]+)", unescaped_html, re.IGNORECASE)
+        schema_phones = re.findall(
+            r'["\'](?:telephone|phone)["\']\s*:\s*["\']([^"\']+)["\']', html, re.IGNORECASE
+        )
         clean_tels = [
             re.sub(r"[^\d+]", "", urllib.parse.unquote(t))
-            for t in tel_matches
+            for t in tel_matches + schema_phones
             if len(re.sub(r"\D", "", t)) >= 10
         ]
         text_phones = PHONE_REGEX.findall(text)
@@ -218,13 +269,37 @@ class WebsiteCrawler:
         return list(dict.fromkeys(valid_emails)), all_phones
 
     async def _fetch_page(self, client: httpx.AsyncClient, url: str) -> CrawledPage | None:
-        """Fetch and parse an individual web page."""
+        """Fetch and parse an individual web page with strict timeout and payload size cap."""
         try:
-            resp = await client.get(url)
-            if resp.status_code != 200:
-                return None
+            # Enforce 5s max per page fetch
+            timeout_cfg = httpx.Timeout(connect=3.0, read=5.0, write=3.0, pool=3.0)
+            async with client.stream("GET", url, timeout=timeout_cfg) as resp:
+                if resp.status_code != 200:
+                    return None
 
-            html = resp.text
+                content_type = resp.headers.get("content-type", "").lower()
+                if content_type and not any(
+                    ct in content_type for ct in ["text", "html", "xml", "json"]
+                ):
+                    return None
+
+                # Stream up to 1.5 MB max to prevent hanging on huge downloads
+                chunks: list[bytes] = []
+                total_bytes = 0
+                max_bytes = 1572864  # 1.5 MB
+                async for chunk in resp.aiter_bytes():
+                    chunks.append(chunk)
+                    total_bytes += len(chunk)
+                    if total_bytes >= max_bytes:
+                        break
+
+                raw_bytes = b"".join(chunks)
+                encoding = resp.encoding or "utf-8"
+                try:
+                    html = raw_bytes.decode(encoding, errors="replace")
+                except Exception:
+                    html = raw_bytes.decode("utf-8", errors="replace")
+
             title, meta_desc, body_text, links = self._clean_text_from_html(html)
             emails, phones = self._extract_emails_and_phones(html, body_text)
 
@@ -253,7 +328,7 @@ class WebsiteCrawler:
             return None
 
     async def crawl_domain(self, base_url: str) -> CrawlResult:
-        """Crawl homepage and targeted contact/about/locations pages for verification and email extraction."""
+        """Crawl homepage and priority subpages with a hard 12s overall domain crawl limit."""
         parsed = urlparse(base_url if "://" in base_url else f"https://{base_url}")
         domain = parsed.netloc.lower().replace("www.", "")
         root_url = f"{parsed.scheme or 'https'}://{parsed.netloc}"
@@ -276,19 +351,51 @@ class WebsiteCrawler:
             except Exception as exc:
                 logger.debug(f"Cache read error for {domain}: {exc}")
 
-        # 2. Perform targeted live crawl
-        combined_text_parts = []
+        # 2. Perform targeted live crawl within hard overall timeout
+        crawl_timeout = min(12.0, max(6.0, self.timeout_seconds * 1.2))
+        try:
+            return await asyncio.wait_for(
+                self._execute_domain_crawl(domain, root_url, cache_path),
+                timeout=crawl_timeout,
+            )
+        except TimeoutError:
+            logger.debug(f"Domain crawl timed out for {domain} after {crawl_timeout}s.")
+            timeout_result = CrawlResult(
+                domain=domain,
+                base_url=root_url,
+                is_accessible=False,
+                error_message="Domain crawl timed out",
+            )
+            self._save_cache(cache_path, timeout_result)
+            return timeout_result
+        except Exception as exc:
+            logger.debug(f"Domain crawl unexpected error for {domain}: {exc}")
+            return CrawlResult(
+                domain=domain,
+                base_url=root_url,
+                is_accessible=False,
+                error_message=str(exc),
+            )
+
+    async def _execute_domain_crawl(
+        self, domain: str, root_url: str, cache_path: Path
+    ) -> CrawlResult:
+        """Execute the actual network crawl operations across homepage and subpages."""
+        combined_text_parts: list[str] = []
         collected_emails: list[str] = []
         collected_phones: list[str] = []
         subpages: list[CrawledPage] = []
 
+        limits = httpx.Limits(max_keepalive_connections=5, max_connections=10)
         async with httpx.AsyncClient(
-            timeout=self.timeout_seconds,
+            timeout=httpx.Timeout(connect=3.0, read=5.0, write=3.0, pool=3.0),
             follow_redirects=True,
+            max_redirects=5,
             verify=False,  # Tolerant to self-signed contractor certificates
             headers={"User-Agent": self.settings.user_agent},
+            limits=limits,
         ) as client:
-            # 2a. Fetch homepage
+            # Fetch homepage
             homepage = await self._fetch_page(client, root_url)
             if not homepage:
                 result = CrawlResult(
@@ -306,7 +413,7 @@ class WebsiteCrawler:
             collected_emails.extend(homepage.emails)
             collected_phones.extend(homepage.phones)
 
-            # 2b. Select priority contact, about, locations, and team pages
+            # Select priority subpages
             priority_urls: list[str] = []
             priority_keywords = [
                 "/contact",
@@ -330,14 +437,13 @@ class WebsiteCrawler:
                 if len(priority_urls) >= self.max_subpages:
                     break
 
-            # Fallback: if no priority contact link found in navigation, try common path endpoints
-            if not any("contact" in u.lower() for u in priority_urls):
-                for fallback_path in ["/contact", "/contact-us", "/about-us", "/about"]:
-                    cand_link = urljoin(root_url, fallback_path)
-                    if cand_link not in priority_urls and len(priority_urls) < self.max_subpages:
-                        priority_urls.append(cand_link)
+            # Fallback to standard contact and about paths if still under max_subpages
+            for fallback_path in ["/contact", "/contact-us", "/about", "/about-us", "/get-in-touch"]:
+                cand_link = urljoin(root_url, fallback_path)
+                if cand_link not in priority_urls and cand_link != root_url and len(priority_urls) < self.max_subpages:
+                    priority_urls.append(cand_link)
 
-            # 2c. Fetch prioritized subpages
+            # Fetch subpages
             for sub_url in priority_urls[: self.max_subpages]:
                 sub_page = await self._fetch_page(client, sub_url)
                 if sub_page:
@@ -360,7 +466,6 @@ class WebsiteCrawler:
             all_phones=unique_phones,
             combined_text=combined_text[:35000],
         )
-
         self._save_cache(cache_path, result)
         return result
 

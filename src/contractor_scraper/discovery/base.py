@@ -38,6 +38,9 @@ class BaseWebsiteFinder(ABC):
         company_name: str,
         city: str,
         state: str,
+        category: str = "roofing",
+        street_address: str = "",
+        zip_code: str = "",
     ) -> list[WebsiteCandidate]:
         """Search public web indices and directories for matching official business websites."""
         ...
@@ -57,6 +60,9 @@ class BaseWebsiteVerifier(ABC):
         expected_company_name: str,
         expected_state: str,
         expected_city: str | None = None,
+        category: str = "roofing",
+        expected_street_address: str | None = None,
+        expected_zip_code: str | None = None,
     ) -> WebsiteVerificationResult:
         """Deep verification of candidate website."""
         ...

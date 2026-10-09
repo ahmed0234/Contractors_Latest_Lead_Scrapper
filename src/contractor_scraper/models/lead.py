@@ -50,8 +50,9 @@ class FinalLead(BaseSchema):
     street_address: str = Field(default="", description="Physical street address")
     zip_code: str = Field(default="", description="ZIP code")
     industry: str = Field(default="", description="Contractor trade or industry")
-
-    # Optional metadata
+    # Optional audit & enrichment metadata
+    original_city: str = Field(default="", description="Original source city before website enrichment")
+    original_state: str = Field(default="", description="Original source state before website enrichment")
     category: ContractorCategory | None = None
     confidence_score: float = Field(default=1.0, ge=0.0, le=1.0)
     verified_at: datetime = Field(default_factory=current_utc_time)

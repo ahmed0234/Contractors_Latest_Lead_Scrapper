@@ -22,6 +22,8 @@ class NormalizedCompanyRecord:
     raw_name: str
     city: str
     state: str
+    street_address: str = ""
+    zip_code: str = ""
     license_number: str | None = None
     industry_codes: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -50,6 +52,19 @@ class DefaultCompanyNormalizer(BaseNormalizer):
         if not clean_state or not clean_city:
             return None
 
+        meta = record.raw_metadata or {}
+        street_address = (
+            record.raw_address
+            or meta.get("street_address")
+            or meta.get("address1")
+            or ""
+        ).strip()
+        zip_code = (
+            meta.get("zip_code")
+            or meta.get("zip")
+            or ""
+        ).strip()
+
         return NormalizedCompanyRecord(
             source_name=record.source_name,
             source_record_id=record.source_record_id,
@@ -57,6 +72,8 @@ class DefaultCompanyNormalizer(BaseNormalizer):
             raw_name=record.raw_name,
             city=clean_city,
             state=clean_state,
+            street_address=street_address,
+            zip_code=zip_code,
             license_number=record.raw_license_number,
             industry_codes=record.raw_industry_codes,
             metadata=record.raw_metadata,

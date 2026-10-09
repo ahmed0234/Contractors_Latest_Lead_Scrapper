@@ -144,19 +144,31 @@ class RoofingClassifier(BaseCategoryClassifier):
     def strong_positive_terms(self) -> list[str]:
         return [
             "roofing contractor",
+            "roofing contractors",
             "roof repair",
+            "roof repairs",
             "roof replacement",
+            "roof replacements",
             "roof restoration",
+            "roof restorations",
             "roof inspection",
+            "roof inspections",
             "roof maintenance",
             "roof installation",
+            "roof installations",
             "roofing service",
+            "roofing services",
             "roofing system",
+            "roofing systems",
             "roofing group",
             "roofing pro",
+            "roofing pros",
             "roofing specialist",
+            "roofing specialists",
             "roofing expert",
+            "roofing experts",
             "roofing master",
+            "roofing masters",
             "commercial roofing",
             "residential roofing",
             "metal roofing",
@@ -167,6 +179,17 @@ class RoofingClassifier(BaseCategoryClassifier):
             "reroofing",
             "re roof",
             "re-roof",
+            "roofing company",
+            "roofing co",
+            "roofing corp",
+            "roofing llc",
+            "roofing inc",
+            "roofing solutions",
+            "roofing solution",
+            "roof coatings",
+            "roof coating",
+            "roof leak",
+            "roof leaks",
             "roofing",
         ]
 
@@ -237,7 +260,6 @@ class RoofingClassifier(BaseCategoryClassifier):
             "clothing",
             "tours",
             "salon",
-            "spa",
             "restaurant",
             "bar",
             "bistro",
@@ -259,6 +281,12 @@ class RoofingClassifier(BaseCategoryClassifier):
                 r"\broof\s+(?:bar|bistro|cafe|lounge|restaurant|inn|hotel)\b", re.IGNORECASE
             ),
             re.compile(r"\broof\s+(?:top|deck)\s+(?:bar|lounge|restaurant)\b", re.IGNORECASE),
+            re.compile(
+                r"\broofing\s+(?:supply|supplies|materials|distributor|wholesale)\b", re.IGNORECASE
+            ),
+            re.compile(
+                r"\b(?:supply|materials|wholesale)\s+roofing\b", re.IGNORECASE
+            ),
         ]
 
 
@@ -493,6 +521,80 @@ class MedSpaClassifier(BaseCategoryClassifier):
         return []
 
 
+class MattressClassifier(BaseCategoryClassifier):
+    """High-precision classifier for Mattress & Bedding retail and service businesses."""
+
+    @property
+    def category(self) -> ContractorCategory:
+        return ContractorCategory.MATTRESS
+
+    @property
+    def strong_positive_terms(self) -> list[str]:
+        return [
+            "mattress store",
+            "mattress outlet",
+            "mattress warehouse",
+            "mattress factory",
+            "mattress firm",
+            "mattress direct",
+            "mattress shop",
+            "mattress gallery",
+            "sleep center",
+            "sleep store",
+            "bedding store",
+            "mattresses",
+            "mattress",
+        ]
+
+    @property
+    def supporting_terms(self) -> list[str]:
+        return ["bed", "beds", "bedding", "sleep", "pillows", "futon", "box spring"]
+
+    @property
+    def negative_terms(self) -> list[str]:
+        return ["moving", "freight", "trucking", "wholesale chemicals", "linen supply", "textile mill"]
+
+    @property
+    def exclusion_patterns(self) -> list[re.Pattern]:
+        return []
+
+
+class SpaClassifier(BaseCategoryClassifier):
+    """High-precision classifier for Day Spa & Wellness businesses."""
+
+    @property
+    def category(self) -> ContractorCategory:
+        return ContractorCategory.SPA
+
+    @property
+    def strong_positive_terms(self) -> list[str]:
+        return [
+            "day spa",
+            "wellness spa",
+            "resort spa",
+            "spa services",
+            "massage spa",
+            "skin spa",
+            "beauty spa",
+            "facial spa",
+            "spa lounge",
+            "spa retreat",
+            "spa",
+        ]
+
+    @property
+    def supporting_terms(self) -> list[str]:
+        return ["massage", "skincare", "facial", "sauna", "hydrotherapy", "wellness", "relaxation"]
+
+    @property
+    def negative_terms(self) -> list[str]:
+        return ["pool supply", "spa parts", "hot tub manufacturing", "hot tub wholesale", "pool chemicals"]
+
+    @property
+    def exclusion_patterns(self) -> list[re.Pattern]:
+        return []
+
+
 # Classifier Registry
 _CLASSIFIERS: dict[str, BaseCategoryClassifier] = {
     "roofing": RoofingClassifier(),
@@ -505,6 +607,10 @@ _CLASSIFIERS: dict[str, BaseCategoryClassifier] = {
     "pest_control": PestControlClassifier(),
     "med-spa": MedSpaClassifier(),
     "med_spa": MedSpaClassifier(),
+    "mattress": MattressClassifier(),
+    "mattresses": MattressClassifier(),
+    "spa": SpaClassifier(),
+    "spas": SpaClassifier(),
 }
 
 
@@ -538,6 +644,10 @@ _KEYWORD_ALIASES: dict[str, str] = {
     "medical-spas": "med-spa",
     "medical spas": "med-spa",
     "aesthetics": "med-spa",
+    "mattress": "mattress",
+    "mattresses": "mattress",
+    "spa": "spa",
+    "spas": "spa",
 }
 
 

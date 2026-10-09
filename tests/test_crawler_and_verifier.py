@@ -151,3 +151,73 @@ def test_website_verifier_rejects_unrelated_site() -> None:
     assert result.is_verified is False
     assert result.status == WebsiteStatus.REJECTED
     assert result.confidence < 0.70
+
+
+def test_website_verifier_rejects_parked_domain() -> None:
+    """Verify verifier identifies and rejects parked/for-sale domain landers."""
+    mock_crawler = WebsiteCrawler()
+    mock_crawl = CrawlResult(
+        domain="apexroofingfl.com",
+        base_url="https://apexroofingfl.com",
+        is_accessible=True,
+        combined_text="Buy this domain! This domain is for sale on GoDaddy.",
+    )
+    mock_crawler.crawl_domain = AsyncMock(return_value=mock_crawl)
+
+    verifier = WebsiteVerifier(crawler=mock_crawler)
+    candidate = WebsiteCandidate(
+        url="https://apexroofingfl.com",
+        domain="apexroofingfl.com",
+        discovery_source="synthetic_probe",
+        initial_confidence=0.9,
+    )
+
+    result = asyncio.run(
+        verifier.verify_website(
+            candidate=candidate,
+            expected_company_name="Apex Roofing LLC",
+            expected_state="FL",
+            expected_city="Orlando",
+            category="roofing",
+        )
+    )
+
+    assert result.is_verified is False
+    assert result.status == WebsiteStatus.PARKED_DOMAIN
+    assert "Parked or for-sale" in (result.failure_reason or "")
+
+
+def test_website_verifier_matches_street_address_and_zip() -> None:
+    """Verify verifier incorporates physical street address and zip code matches."""
+    mock_crawler = WebsiteCrawler()
+    mock_crawl = CrawlResult(
+        domain="apexroofingfl.com",
+        base_url="https://apexroofingfl.com",
+        is_accessible=True,
+        combined_text="Apex Roofing, 1234 Colonial Drive, Orlando FL 32801. Professional roofing contractor.",
+    )
+    mock_crawler.crawl_domain = AsyncMock(return_value=mock_crawl)
+
+    verifier = WebsiteVerifier(crawler=mock_crawler)
+    candidate = WebsiteCandidate(
+        url="https://apexroofingfl.com",
+        domain="apexroofingfl.com",
+        discovery_source="synthetic_probe",
+        initial_confidence=0.85,
+    )
+
+    result = asyncio.run(
+        verifier.verify_website(
+            candidate=candidate,
+            expected_company_name="Apex Roofing LLC",
+            expected_state="FL",
+            expected_city="Orlando",
+            category="roofing",
+            expected_street_address="1234 Colonial Drive",
+            expected_zip_code="32801",
+        )
+    )
+
+    assert result.is_verified is True
+    assert "zip_32801_match" in result.verification_checks
+    assert "street_address_match" in result.verification_checks

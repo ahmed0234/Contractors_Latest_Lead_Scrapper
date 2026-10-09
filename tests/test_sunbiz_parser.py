@@ -14,6 +14,10 @@ def test_parse_valid_sunbiz_record() -> None:
     assert record.raw_city == "ORLANDO"
     assert record.raw_state == "FL"
     assert record.raw_filing_date == "01152025"
+    assert record.raw_address == "123 MAIN ST"
+    assert record.raw_metadata["address1"] == "123 MAIN ST"
+    assert record.raw_metadata["zip"] == "32801"
+    assert record.raw_metadata["zip_code"] == "32801"
     assert record.raw_metadata["filing_year"] == 2025
     assert record.raw_metadata["is_active"] is True
 
