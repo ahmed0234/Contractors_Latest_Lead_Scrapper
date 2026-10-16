@@ -1,296 +1,183 @@
-# U.S. Contractor Lead-Generation Engine
+# Production-Grade Contractor Lead Generation & Enrichment Engine
 
-A high-accuracy, production-grade lead-generation engine for U.S. contractors. The system ingests official public state corporate filing records (Florida Sunbiz), filters companies through a high-precision multi-signal trade classifier, discovers official company websites via public search without commercial APIs, crawls and verifies business identities, extracts and verifies domain-matched business emails, deduplicates leads, and exports clean CSVs containing strictly verified, complete records.
-
----
-
-## 1. Project Purpose & Scope
-
-The engine is engineered specifically for lead quality over quantity:
-
-- **Authoritative Initial Dataset**: Florida Department of State (Division of Corporations / Sunbiz) public corporate filing data.
-- **Contractor Category Focus**: Modular category system starting with a high-precision **Roofing** contractor classifier, architected to support HVAC, Plumbing, Landscaping, Hardscaping, Remodeling, Pest Control, and Med Spa.
-- **Zero Commercial APIs**: Uses official state data portals and public search engine indices—no paid API keys, commercial data vendors, or SaaS dependencies.
-- **Strict 5-Column Lead Requirement**: Every output lead in the final CSV strictly contains all five fields:
-  ```text
-  Company Name,Email,Website,City,State
-  ```
-- **Zero Placeholders**: If any field is missing, invalid, or fails identity verification, the record is excluded. No `N/A`, `Unknown`, `None`, or blanks are ever output.
+A high-precision, production-grade intelligence and enrichment platform for U.S. service contractors. The system combines state corporate filing ingestion (Florida Sunbiz) with an advanced asynchronous website crawler and multi-signal trade verification engine to discover, crawl, qualify, and segregate genuine contractors while strictly filtering out non-qualifying businesses, retail chains, and directories.
 
 ---
 
-## 2. Core Architecture & Pipeline
+## 🌟 Key Features & Capabilities
+
+1. **Christmas & Holiday Lighting Installation Classifier (`classify_christmas_lights.py`)**:
+   - Crawls contractor websites and examines seasonal service pages, metadata, and JSON-LD schema.
+   - Accurately qualifies genuine holiday lighting installers while preserving seasonal multi-trades (landscapers, window washers, and roofers who offer winter holiday lighting).
+   - Strictly excludes event/DJ lighting, landscape-only lighting, general electricians, product retailers, and casual greetings.
+   - Automatically segregates leads into 4 dedicated output CSV files.
+2. **State Filing Acquisition & Sunbiz Ingestion**:
+   - Streams official Florida Department of State (Sunbiz) corporate records directly from public SFTP/HTTPS servers without holding gigabytes in memory.
+3. **Zero Commercial API Dependencies**:
+   - Operates entirely on direct public state records, public search discovery, and native asynchronous web crawling—no paid API keys, commercial data vendors, or SaaS lock-in.
+4. **Resilient Anti-Bot Website Discovery & Crawling**:
+   - Uses modern browser fingerprinting (Chrome 131), proactive service endpoint probing, deep 2-tier subpage discovery, and fast-path retail domain exclusion.
+5. **Deduplication & Data Integrity**:
+   - 100% preservation of all original input columns, data formatting, and multi-line fields, with added diagnostic classification columns and evidence tracking.
+
+---
+
+## 🎄 Christmas & Holiday Lighting Lead Classification Engine
+
+The Christmas lighting pipeline reads raw lead CSVs, crawls company websites, and programmatically determines genuine on-site installation service providers.
 
 ```mermaid
 flowchart TD
-    A[Florida Sunbiz SFTP/HTTPS] -->|Download & Cache| B[Raw Fixed-Width Parser]
-    B -->|Stream 1440-byte records| C[Company Normalization]
-    C -->|Strip legal suffixes & normalize casing| D[Category Classifier]
-    D -->|High-Precision Trade Rules| E[Candidate Filter]
-    E -->|DuckDuckGo Public Search| F[Website Discovery]
-    F -->|Reject 40+ Directories & Review Sites| G[Candidate Websites]
-    G -->|Multi-Signal Location & Trade Verification| H[Website Verifier]
-    H -->|Targeted Async Crawler| I[Email Extractor]
-    I -->|Reject templates, image artifacts| J[Email Deliverability & MX Check]
-    J -->|Multi-signal Deduplication| K[Final Validation]
-    K -->|Exact 5 Columns| L[CSV Lead Export]
+    A[Raw Input CSV] -->|Preserve All 34+ Columns| B[URL & Domain Normalizer]
+    B -->|Fast-Check Retail Domains| C{Known Retailer?}
+    C -->|Yes: Home Depot, Walmart, etc.| D[Classify: Not Qualified]
+    C -->|No| E[Async Crawler with Modern Headers]
+    E -->|Probe /holiday-lighting, /christmas-light-installation| F[Multi-Page Content Aggregator]
+    F -->|250+ Service Phrases & Regex Patterns| G{Holiday Service Verified?}
+    G -->|Yes: Dedicated or Multi-Trade Seasonal| H[Classify: Qualified Leads.csv]
+    G -->|No: Event/DJ, Landscape-only, Electrician| I[Classify: Not Qualified Leads.csv]
+    G -->|No: Active Site with No Holiday Services| I
+    G -->|Site Inaccessible / Timeout / 404| J[Classify: Unreachable Leads.csv]
+    G -->|Minimal Content / Insufficient Info| K[Classify: Uncertain.csv]
+    H & I & J & K --> L[Atomic Flush to Output CSVs + Consolidated All Leads.csv]
 ```
 
-### Pipeline Stages
-1. **Sunbiz Acquisition Layer** ([`FloridaSunbizSource`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/acquisition/sunbiz.py)): Connects directly to Florida DOS public SFTP/HTTPS server (`https://sftp.floridados.gov/Public/doc/cor/`), discovers daily filing datasets for the requested year (e.g. 2025), caches raw files locally in `data/raw/sunbiz/<year>/`, and streams lines without holding gigabytes in memory.
-2. **Fixed-Width Record Parser** ([`SunbizRecordParser`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/parsing/sunbiz_parser.py)): Streams 1440-byte fixed-width ASCII lines, extracting filing numbers, corporate names, status, physical addresses, cities, states, zip codes, and filing dates.
-3. **Normalization Engine** ([`clean_company_name`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/normalization/cleaners.py)): Strips legal suffixes (`LLC`, `INC`, `CORP`, `P.A.`, etc.), normalizes casing to clean Title Case while preserving trade acronyms (`HVAC`, `AC`, `USA`), and cleans cities and 2-letter state codes while keeping raw names preserved.
-4. **Category Classifier** ([`RoofingClassifier`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/classification/classifier.py)): High-precision scoring evaluating strong positive contractor phrases, supporting trade terms, negative exclusion lists (wholesale, supplies, materials, manufacturing, software, consulting, hospitality), and false-positive regex ("red roof", "tin roof restaurant", etc.).
-5. **Website Discovery** ([`WebsiteFinder`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/discovery/website_finder.py)): Queries public search indices with high-intent query permutations (`"{Company}" {City} FL`, `"{Company}" roofing {City} FL`), unquotes redirects, extracts root domains, and strictly filters 40+ directories and lead portals (Yelp, BBB, Angi, HomeAdvisor, Thumbtack, YellowPages, Cortera, etc.). Results are deterministically cached to disk.
-6. **Website Crawler & Verifier** ([`WebsiteCrawler`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/discovery/crawler.py), [`WebsiteVerifier`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/discovery/website_verifier.py)): Crawls homepage and targeted `/contact` and `/about` subpages. Computes multi-signal confidence scores across business name tokens, Florida/city geographic signals, contractor trade keywords, and domain name relevance (threshold >= 0.70).
-7. **Email Extraction & Verification** ([`EmailExtractor`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/extraction/email_extractor.py), [`EmailVerifier`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/extraction/email_verifier.py)): Extracts `mailto:` and body text emails, filters dummy templates (`test@`, `example@`, `admin@`, `noreply@`), ignores image artifacts (`icon.png@...`), scores domain-aligned mail addresses, and verifies active DNS MX/A mail exchange records.
-8. **Deduplication** ([`LeadDeduplicator`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/matching/dedup.py)): Tracks canonical company fingerprints, website domains, and emails to prevent duplicate entries in output leads.
-9. **Lead Engine Orchestration** ([`LeadEngine`](file:///d:/Production%20Grade/contractors_finding_scrapper/src/contractor_scraper/orchestration/lead_engine.py)): Manages async concurrency limits, checkpoints runs in SQLite WAL database, stops ingestion immediately once the target limit of verified leads is satisfied, and outputs the clean CSV.
+### Qualification Rules
+
+| Target Niches (Qualified) | Strict Exclusions (Not Qualified) |
+|---|---|
+| **Holiday Lighting Installation Companies** | **Landscaping-only / Landscape lighting** (pathway, garden uplighting without holiday service) |
+| **Christmas Lighting Installation Companies** | **General electrical contractors** (indoor fixtures, ceiling fans, breaker panels) |
+| **Permanent Holiday Lighting Contractors** (Trimlight, Gemstone, Jellyfish, Everlights) | **Event, DJ, wedding, and stage lighting companies** |
+| **Seasonal Multi-Trades** (Landscapers, window cleaners, roofers with verified winter holiday lighting) | **Retailers, e-commerce stores, and wholesale lighting suppliers** |
+| | **Casual holiday greetings** ("Closed for Christmas", "Holiday hours") with no lighting services |
+
+### Running the Christmas Lighting Classifier
+
+```bash
+# Activate virtual environment
+.\.venv\Scripts\activate
+
+# Run the classifier using default input (auto-detects the raw CSV in christmas light installation/)
+python classify_christmas_lights.py
+
+# Optional: Run with custom concurrency and timeout
+python classify_christmas_lights.py --concurrency 16 --timeout 15.0
+
+# Optional: Run a test batch on the first 50 leads
+python classify_christmas_lights.py --limit 50
+
+# Optional: Disable resume or customize output folder
+python classify_christmas_lights.py --output "christmas light installation/output" --no-resume
+```
+
+### Output Files Generated
+
+Outputs are saved directly inside `christmas light installation/output/`:
+
+1. **`Qualified Leads.csv`**: Verified holiday and Christmas lighting installation contractors (including seasonal multi-trades).
+2. **`Not Qualified Leads.csv`**: Excluded businesses (retailers, electricians, event lighting, landscape-only).
+3. **`Unreachable Leads.csv`**: Websites that could not be accessed due to connection errors, DNS failure, or persistent timeouts.
+4. **`Uncertain.csv`**: Leads where available website content is too minimal to make a confident decision.
+5. **`All Leads.csv`**: Consolidated master file with diagnostic columns:
+   - `Does this company provide Christmas light installation?` (`Yes`, `No`, `Uncertain`, `Unreachable`)
+   - `Website status` (`OK`, `Connection Error`, `Timeout`, `Bot Challenge`, etc.)
+   - `Classification reasoning` (Detailed human-readable audit justification)
+   - `Website access error` (Exact network exception if unreachable)
+   - `Evidence` (Exact matched phrases and regex patterns)
 
 ---
 
-## 3. Installation & Quick Setup
+## 🏗️ State Filing Ingestion Engine (Florida Sunbiz)
 
-Follow these simple steps to clone, set up, and run the project locally.
+The Florida Sunbiz pipeline ingests official state corporate filings, normalizes business names, classifies primary trade categories, discovers candidate websites, and extracts verified domain-aligned business emails.
+
+```bash
+# Run Sunbiz pipeline via the CLI
+python -m contractor_scraper.cli.app run --year 2025 --category Roofing --limit 1000
+```
+
+---
+
+## 🚀 Installation & Setup
 
 ### Prerequisites
 - **Python**: Version `3.11`, `3.12`, `3.13`, or `3.14` (64-bit).
 - **Git**: Installed on your system.
 
----
+### 1. Clone & Set Up Virtual Environment
 
-### Step 1: Clone the Repository
 ```bash
-git clone <GITHUB_REPO_URL>
+git clone <REPOSITORY_URL>
 cd contractors_finding_scrapper
-```
 
----
-
-### Step 2: Create & Activate a Virtual Environment
-
-**Windows (PowerShell):**
-```powershell
+# Windows (PowerShell)
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-```
-*(If you see a script execution policy restriction in PowerShell, run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` and retry.)*
 
-**Windows (Command Prompt):**
-```cmd
-python -m venv .venv
-.\.venv\Scripts\activate.bat
-```
-
-**Linux / macOS:**
-```bash
+# Linux / macOS
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
----
-
-### Step 3: Install Dependencies
-
-You can install using `requirements.txt` or editable package install:
+### 2. Install Dependencies
 
 ```bash
-# Option A: Install via requirements.txt
 pip install -r requirements.txt
-
-# Option B: Install package in editable mode
-pip install -e .
-
-# Optional: Install developer tools (pytest, ruff)
-pip install -e ".[dev]"
 ```
 
 ---
 
-### Step 4: Environment Variables & Configuration (.env)
+## 🧪 Testing & Verification
 
-> **Good News**: The project works **100% out of the box** without any paid API keys or commercial services. It uses official public state records and public search indexing.
-
-If you wish to customize default settings (concurrency, output directories, log level):
-
-**Windows (PowerShell / CMD):**
-```bash
-copy .env.example .env
-```
-
-**Linux / macOS:**
-```bash
-cp .env.example .env
-```
-
-Key optional settings inside `.env`:
-- `SCRAPER_SELECTED_CATEGORY`: Default category (e.g. `Roofing`, `HVAC`, `Plumbing`)
-- `SCRAPER_SELECTED_STATE`: Default 2-letter state code (`TX`, `FL`, `CA`, etc.)
-- `SCRAPER_CONCURRENCY_LIMIT`: Max concurrent async workers (default `10`)
-- `SCRAPER_LOG_LEVEL`: Log level (`INFO`, `DEBUG`)
-
----
-
-### Step 5: Initialize the Database
-
-Initialize persistent SQLite tables and local directories:
+The project includes a comprehensive automated test suite with deterministic mocks covering web crawling, trade classification, subpage extraction, email verification, and CSV enrichment.
 
 ```bash
-python scraper.py init-db
-```
+# Run complete test suite (115 tests)
+pytest tests/ -v
 
-Verify your setup status anytime:
-```bash
-python scraper.py status
+# Run Christmas lighting enrichment tests specifically
+pytest tests/test_christmas_light_enricher_improvements.py -v
 ```
 
 ---
 
-## 4. CLI Usage
-
-The primary command line interface is `contractor-scraper`.
-
-### Running the Lead Engine
-
-```bash
-# 1. Generate verified roofing contractor leads (shortcut flag)
-python scraper.py --limit 2000 --roofing
-
-# 2. Or using standard arguments:
-python scraper.py --year 2025 --keyword roofing --limit 10000
-
-# 3. Target 2024 HVAC contractors with limit 5,000
-python scraper.py --year 2024 --keyword hvac --limit 5000
-
-# 4. Target 2025 Plumbing contractors with limit 2,500
-python scraper.py --year 2025 --keyword plumbing --limit 2500
-
-# 5. Sampling / Testing run on 1 Sunbiz filing file
-python scraper.py --year 2025 --keyword roofing --limit 10 --max-files 1
-```
-
-All commands can also be run via the CLI script:
-```bash
-contractor-scraper --limit 2000 --roofing
-```
-
-> **Production Safeguards**:
-> - **Continuous Atomic Checkpointing**: Discovered leads are immediately written to disk using atomic file replacements. If you pause the run (`Ctrl+C`) or your network connection drops, 100% of previously found leads remain safe.
-> - **Anti-Stall Hard Timeouts**: The scraper enforces hard per-request and per-company timeouts (30s max total per company). An unresponsive or slow contractor site is recorded and skipped immediately—the scraper will never freeze.
-> - **Seamless Restartability**: When resuming a run, already discovered and exported companies are automatically detected and skipped, continuing toward your target limit without duplicated work.
-
-### Supported Categories & Keyword Aliases
-- `roofing` (aliases: `roof`, `roofer`, `roofers`)
-- `hvac` (aliases: `ac`, `air-conditioning`, `heating`, `cooling`)
-- `plumbing` (aliases: `plumber`, `plumbers`)
-- `landscaping` (aliases: `lawn`, `landscape`)
-- `hardscaping` (aliases: `hardscape`, `paver`, `pavers`)
-- `remodeling` (aliases: `remodel`, `remodeler`, `renovation`)
-- `pest-control` (aliases: `pest`, `exterminator`)
-- `med-spa` (aliases: `medspa`, `medical-spa`)
-
-### Additional CLI Commands
-- `python scraper.py --help`: Display CLI options and usage.
-- `python scraper.py status`: Inspect configuration, concurrency limits, and data paths.
-- `python scraper.py init-db`: Initialize or verify persistent SQLite tables.
-- `python scraper.py inspect-runs`: Display recent execution checkpoints, records processed, and lead counts.
-
----
-
-## 5. Output Format
-
-Every execution automatically generates **two separate CSV files** in the `data/output/` directory:
-
-1. **Production-Ready Leads** (`data/output/production_leads.csv` & `data/output/<category>_<year>_production_leads.csv`):
-   Contains highest-quality verified leads where both the official company website and email contact are present.
-2. **Leads Missing Email or Website** (`data/output/leads_missing_contact.csv` & `data/output/<category>_<year>_leads_missing_contact.csv`):
-   Contains verified trade contractor matches from the official state filing data where the email address and/or website could not yet be discovered, allowing you to research them later without losing valid leads.
-
-### Output Column Schema (Identical across both files)
-```csv
-Company Name,Website,Email,City,State,Formation Date,Document Number,Company Status,Street Address,ZIP Code,Industry
-```
-
-#### Example: `production_leads.csv`
-```csv
-Company Name,Website,Email,City,State,Formation Date,Document Number,Company Status,Street Address,ZIP Code,Industry
-Apex Roofing LLC,https://apexroofingfl.com,info@apexroofingfl.com,Orlando,FL,2025-01-02,P25000001234,Active,123 Main St,32801,Roofing
-Summit Roof Repairs,https://summitroofs.com,contact@summitroofs.com,Tampa,FL,2025-01-03,P25000001235,Active,456 Oak Ave,33602,Roofing
-```
-
-#### Example: `leads_missing_contact.csv`
-```csv
-Company Name,Website,Email,City,State,Formation Date,Document Number,Company Status,Street Address,ZIP Code,Industry
-Coastal Roofing Pros,https://coastalroofingpros.com,,Jacksonville,FL,2025-01-04,P25000001236,Active,789 Bay St,32202,Roofing
-Sunshine State Roofing,,,Miami,FL,2025-01-05,P25000001237,Active,101 Palm Ave,33101,Roofing
-```
-
-* **Strict Industry Matching**: Unrelated businesses (e.g. financial firms, hardware retail stores, supplier wholesalers) are strictly excluded from both CSV files.
-* **Zero Fake Placeholders**: Missing values are left blank—no placeholders such as `N/A`, `Unknown`, or `None` are used.
-
----
-
-## 6. Execution Telemetry & Summary
-
-At the completion of each run, a comprehensive telemetry audit is displayed:
+## 📁 Project Directory Structure
 
 ```text
-+------------------------- Lead Generation Execution Summary -------------------------+
-| Year:                  2025                                                         |
-| Category:              Roofing                                                      |
-| Requested Limit:       10,000                                                       |
-| Raw Records Examined:  250,000                                                      |
-| Category Candidates:   18,420                                                       |
-| Websites Discovered:   15,700                                                       |
-| Websites Verified:     11,240                                                       |
-| Emails Discovered:     8,913                                                        |
-| Final Complete Leads:  8,421                                                        |
-| Rejected Records:      9,999                                                        |
-| Duration:              1240.5s                                                      |
-| Output File:           data\output\roofing_2025.csv                                 |
-+-------------------------------------------------------------------------------------+
+contractors_finding_scrapper/
+├── classify_christmas_lights.py      # Christmas lighting CLI runner
+├── enrich_pest_control.py             # Pest control lead enrichment runner
+├── pyproject.toml                     # Project packaging and tool configuration
+├── requirements.txt                   # Production dependencies
+├── .gitignore                         # Configured ignore patterns
+├── christmas light installation/      # Working folder (ignored in git)
+│   ├── Christmas Lights Installation...csv  # Raw input leads (5,300+ records)
+│   └── output/                        # Categorized CSV output folder
+│       ├── Qualified Leads.csv
+│       ├── Not Qualified Leads.csv
+│       ├── Unreachable Leads.csv
+│       ├── Uncertain.csv
+│       └── All Leads.csv
+├── src/
+│   └── contractor_scraper/
+│       ├── acquisition/               # Sunbiz SFTP/HTTPS data downloader
+│       ├── classification/            # Christmas light & trade classifiers
+│       │   ├── christmas_light_classifier.py
+│       │   └── classifier.py
+│       ├── discovery/                 # Website discovery & crawler
+│       │   ├── crawler.py             # Resilient async browser crawler
+│       │   └── website_finder.py
+│       ├── extraction/                # Business email and contact extraction
+│       ├── orchestration/             # Lead enrichment pipeline runners
+│       │   ├── christmas_light_enricher.py
+│       │   └── lead_engine.py
+│       └── storage/                   # SQLite WAL lead database & checkpoints
+└── tests/                             # Comprehensive test suite (115 tests)
 ```
 
 ---
 
-## 7. Testing & Quality Assurance
+## 📄 License
 
-The project includes an automated test suite with deterministic mocks covering Sunbiz parsing, company normalization, category classification, website discovery, website verification, email extraction, DNS verification, deduplication, and end-to-end engine limit behavior.
-
-```bash
-# Run pytest test suite (67 tests)
-pytest -v
-
-# Run linter
-ruff check .
-
-# Run code format checker
-ruff format --check .
-```
-
----
-
-## 8. Publishing & Pushing to GitHub
-
-To upload this repository to GitHub for the first time:
-
-```bash
-# 1. Initialize local Git repository
-git init
-
-# 2. Stage all project files (ignoring files listed in .gitignore)
-git add .
-
-# 3. Create initial commit
-git commit -m "Initial commit: U.S. Contractor Lead-Generation Engine"
-
-# 4. Set main branch
-git branch -M main
-
-# 5. Link to your GitHub repository
-git remote add origin https://github.com/<YOUR_USERNAME>/<YOUR_REPOSITORY>.git
-
-# 6. Push code to GitHub
-git push -u origin main
-```
-
+Proprietary & Confidential. Developed for production contractor lead generation and qualification.
