@@ -54,8 +54,10 @@ class WebsiteVerifier(BaseWebsiteVerifier):
         category: str = "roofing",
         expected_street_address: str | None = None,
         expected_zip_code: str | None = None,
+        expected_phone: str | None = None,
+        expected_email: str | None = None,
     ) -> WebsiteVerificationResult:
-        """Deep verification of candidate website against Florida entity details."""
+        """Deep verification of candidate website against entity details."""
         crawl = await self.crawler.crawl_domain(candidate.url)
         if not crawl.is_accessible:
             return WebsiteVerificationResult(
@@ -187,12 +189,45 @@ class WebsiteVerifier(BaseWebsiteVerifier):
         if category_clean in text_lower or (title_lower and category_clean in title_lower):
             category_score = 1.0
             checks.append(f"category_{category_clean}_match")
+        elif category_clean in ("pest control", "pest-control", "pest") and any(
+            term in text_lower
+            for term in ["pest control", "exterminat", "termite", "bed bug", "rodent", "fumigation"]
+        ):
+            category_score = 1.0
+            checks.append("pest_control_trade_match")
         elif any(
             term in text_lower
             for term in ["contractor", "services", "repairs", "installation", "construction"]
         ):
             category_score = 0.6
             checks.append("general_contractor_terms")
+
+        # 5. Optional Phone Number Verification Signal (High Precision)
+        phone_match = False
+        if expected_phone:
+            raw_phone_digits = re.sub(r"\D", "", expected_phone)
+            if len(raw_phone_digits) >= 10:
+                phone_10 = raw_phone_digits[-10:]
+                c_phones = [
+                    re.sub(r"\D", "", p)[-10:] for p in crawl.all_phones if len(re.sub(r"\D", "", p)) >= 10
+                ]
+                if phone_10 in c_phones or phone_10 in re.sub(r"\D", "", text_lower):
+                    phone_match = True
+                    checks.append("phone_number_match")
+
+        # 6. Optional Email Domain Match Signal (Custom Domain Only)
+        email_dom_match = False
+        if expected_email and "@" in expected_email:
+            _, email_dom = expected_email.lower().strip().split("@", 1)
+            free_email_providers = {
+                "gmail.com", "yahoo.com", "aol.com", "hotmail.com", "outlook.com",
+                "icloud.com", "comcast.net", "att.net", "msn.com", "sbcglobal.net"
+            }
+            if email_dom not in free_email_providers:
+                cand_dom = candidate.domain.lower().strip()
+                if cand_dom == email_dom or cand_dom.endswith(f".{email_dom}") or email_dom.endswith(f".{cand_dom}"):
+                    email_dom_match = True
+                    checks.append("email_domain_match")
 
         # Composite Confidence Score Calculation
         confidence = (
@@ -202,11 +237,23 @@ class WebsiteVerifier(BaseWebsiteVerifier):
             + (category_score * 0.20)
         )
 
+        # Phone match or email domain match significantly elevates confidence
+        if phone_match:
+            confidence = max(confidence, 0.88)
+            name_score = max(name_score, 0.75)
+        if email_dom_match:
+            confidence = max(confidence, 0.92)
+            name_score = max(name_score, 0.85)
+
         # Pragmatic verification threshold:
         # Verified if composite confidence >= 0.52 and name_score >= 0.35,
-        # OR if domain has an exact distinctive brand match with state or category support
-        is_verified = (confidence >= 0.52 and name_score >= 0.35) or (
-            domain_brand_match and (geo_score > 0 or category_score > 0)
+        # OR if domain has an exact distinctive brand match with state or category support,
+        # OR if phone number / email domain directly matches
+        is_verified = (
+            (confidence >= 0.52 and name_score >= 0.35)
+            or (domain_brand_match and (geo_score > 0 or category_score > 0))
+            or phone_match
+            or email_dom_match
         )
 
         status = WebsiteStatus.VERIFIED if is_verified else WebsiteStatus.REJECTED

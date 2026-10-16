@@ -3,6 +3,8 @@
 import typer
 
 from contractor_scraper.cli.commands import (
+    classify_christmas_lights_command,
+    enrich_pest_control_command,
     execute_engine_cli,
     init_db_command,
     inspect_runs_command,
@@ -187,6 +189,101 @@ def init_database() -> None:
 )
 def inspect_runs() -> None:
     inspect_runs_command()
+
+
+@app.command(
+    name="enrich-pest-control",
+    help="Enrich an existing Pest Control CSV with verified official websites and trade classifications.",
+)
+def enrich_pest_control(
+    input_file: str = typer.Option(
+        "input_files/Pest Control - James  - Final Raw Leads.csv",
+        "--input",
+        "-i",
+        help="Path to input CSV containing pest control companies.",
+    ),
+    output_file: str = typer.Option(
+        "data/output/enriched_pest_control_leads.csv",
+        "--output",
+        "-o",
+        help="Path to save enriched output CSV file.",
+    ),
+    limit: int | None = typer.Option(
+        None,
+        "--limit",
+        "-l",
+        help="Maximum records to process (for testing or sampling).",
+    ),
+    concurrency: int = typer.Option(
+        5,
+        "--concurrency",
+        "-c",
+        help="Maximum concurrent asynchronous website discovery & crawl workers.",
+    ),
+    resume: bool = typer.Option(
+        True,
+        "--resume/--no-resume",
+        help="Resume processing from already-enriched output file if it exists.",
+    ),
+) -> None:
+    enrich_pest_control_command(
+        input_path=input_file,
+        output_path=output_file,
+        limit=limit,
+        concurrency=concurrency,
+        resume=resume,
+    )
+
+
+@app.command(
+    name="classify-christmas-lights",
+    help="Clean and classify Christmas light installation contractor leads from company websites.",
+)
+def classify_christmas_lights(
+    input_file: str = typer.Option(
+        "christmas light installation/Christmas Lights Installation.csv",
+        "--input",
+        "-i",
+        help="Path to input CSV containing Christmas light contractor candidates.",
+    ),
+    output_dir: str = typer.Option(
+        "christmas light installation/output",
+        "--output",
+        "--output-dir",
+        "-o",
+        help="Directory to save classified and categorized CSV files.",
+    ),
+    limit: int | None = typer.Option(
+        None,
+        "--limit",
+        "-l",
+        help="Maximum records to process (for testing or sampling).",
+    ),
+    concurrency: int = typer.Option(
+        6,
+        "--concurrency",
+        "-c",
+        help="Maximum concurrent asynchronous website crawl workers.",
+    ),
+    resume: bool = typer.Option(
+        True,
+        "--resume/--no-resume",
+        help="Resume processing from already-evaluated output file if it exists.",
+    ),
+    timeout: float = typer.Option(
+        10.0,
+        "--timeout",
+        help="Timeout in seconds for website crawl requests.",
+    ),
+) -> None:
+    classify_christmas_lights_command(
+        input_path=input_file,
+        output_dir=output_dir,
+        limit=limit,
+        concurrency=concurrency,
+        resume=resume,
+        timeout=timeout,
+    )
 
 
 if __name__ == "__main__":

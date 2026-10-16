@@ -78,3 +78,6 @@ dist/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Lead data and outputs
+christmas light installation/

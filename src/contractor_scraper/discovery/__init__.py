@@ -12,6 +12,10 @@ from contractor_scraper.discovery.website_finder import (
     WebsiteFinder,
     extract_root_domain,
 )
+from contractor_scraper.discovery.company_website_matcher import (
+    CompanyWebsiteMatcher,
+    CompanyWebsiteMatchResult,
+)
 from contractor_scraper.discovery.website_verifier import WebsiteVerifier
 
 __all__ = [
@@ -26,4 +30,6 @@ __all__ = [
     "CrawlResult",
     "BLOCKED_DIRECTORY_DOMAINS",
     "extract_root_domain",
+    "CompanyWebsiteMatcher",
+    "CompanyWebsiteMatchResult",
 ]

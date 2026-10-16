@@ -63,6 +63,8 @@ class BaseWebsiteVerifier(ABC):
         category: str = "roofing",
         expected_street_address: str | None = None,
         expected_zip_code: str | None = None,
+        expected_phone: str | None = None,
+        expected_email: str | None = None,
     ) -> WebsiteVerificationResult:
         """Deep verification of candidate website."""
         ...

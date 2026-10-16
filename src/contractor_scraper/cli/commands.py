@@ -343,3 +343,60 @@ def inspect_runs_command() -> None:
             )
 
         console.print(table)
+
+
+def enrich_pest_control_command(
+    input_path: str,
+    output_path: str,
+    limit: int | None = None,
+    concurrency: int = 5,
+    resume: bool = True,
+) -> None:
+    """Enrich an existing pest control CSV with verified official websites and trade classification."""
+    from contractor_scraper.orchestration.csv_enricher import CSVEnricher
+
+    settings = get_settings()
+    settings.ensure_directories()
+    setup_logging(log_level=settings.log_level, logs_dir=settings.logs_dir)
+
+    enricher = CSVEnricher(concurrency_limit=concurrency)
+    asyncio.run(
+        enricher.enrich_csv(
+            input_csv_path=input_path,
+            output_csv_path=output_path,
+            limit=limit,
+            resume=resume,
+            category="pest control",
+        )
+    )
+
+
+def classify_christmas_lights_command(
+    input_path: str = "christmas light installation/Christmas Lights Installation.csv",
+    output_dir: str = "christmas light installation/output",
+    limit: int | None = None,
+    concurrency: int = 6,
+    resume: bool = True,
+    timeout: float = 10.0,
+) -> None:
+    """Clean and classify Christmas light installation contractor leads from company websites."""
+    from contractor_scraper.orchestration.christmas_light_enricher import (
+        ChristmasLightLeadEnricher,
+    )
+
+    settings = get_settings()
+    settings.ensure_directories()
+    setup_logging(log_level=settings.log_level, logs_dir=settings.logs_dir)
+
+    enricher = ChristmasLightLeadEnricher(
+        concurrency_limit=concurrency,
+        timeout_seconds=timeout,
+    )
+    asyncio.run(
+        enricher.process_leads(
+            input_csv_path=input_path,
+            output_dir=output_dir,
+            limit=limit,
+            resume=resume,
+        )
+    )

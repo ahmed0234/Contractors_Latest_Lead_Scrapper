@@ -114,6 +114,15 @@ BLOCKED_DIRECTORY_DOMAINS: set[str] = {
     "floridaroof.com",
     "floridacontractorcheck.com",
     "floridaconstructionguide.com",
+    # Pest Control Portals & Associations
+    "pestworld.org",
+    "npmapestworld.org",
+    "pctonline.com",
+    "mypmp.net",
+    "pestcontroltechnology.com",
+    "peststrategies.com",
+    "qualitypro.org",
+    "certifiedpestcontrol.com",
     # Career & Jobs
     "indeed.com",
     "glassdoor.com",
@@ -789,6 +798,10 @@ class WebsiteFinder(BaseWebsiteFinder):
                 if cat_clean == "roofing":
                     stems.append(f"{brand}roofs")
                     stems.append(f"{brand}pros")
+                elif cat_clean in ("pestcontrol", "pest"):
+                    stems.append(f"{brand}pest")
+                    stems.append(f"{brand}pestcontrol")
+                    stems.append(f"{brand}exterminating")
 
         unique_stems = list(dict.fromkeys([s for s in stems if len(s) >= 3]))
         candidates: list[str] = []
