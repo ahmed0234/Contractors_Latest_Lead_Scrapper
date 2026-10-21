@@ -1,20 +1,29 @@
-"""Production-grade Christmas Light Installation Lead Enrichment and Classification Pipeline.
+"""Production-grade Christmas, Holiday & Permanent Decorative Light Installation lead classification pipeline.
 
-Reads contractor leads from CSV, visits company websites, determines genuine installation
-service provision vs product sellers, and outputs clean segregated CSV lead files.
-100% preserves original input data, columns, multi-line values, and row integrity.
+Reads contractor leads from CSV, crawls each company website thoroughly (homepage, navigation,
+sitemap, holiday/permanent-lighting service pages), classifies genuine installation service
+providers vs. product sellers and unrelated trades, and writes four segregated output CSVs with
+enrichment columns. 100% preserves original input data, columns, multi-line values, and row order.
+
+Reliability features:
+- Each unique website is crawled once (rows sharing a domain reuse the verdict).
+- Bounded global concurrency plus per-domain request limits and delays (inside the crawler).
+- Results are checkpointed incrementally (JSONL) so interrupted runs resume without re-crawling.
+- A second, more patient pass re-crawls websites that failed with temporary errors.
+- Post-run QA validates that every input lead appears in exactly one output file.
 """
 
 import asyncio
 import csv
-from dataclasses import dataclass, field
+import hashlib
+import json
+import logging
+import time
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
-import re
-import sys
-import time
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from rich.console import Console
 from rich.panel import Panel
@@ -35,16 +44,29 @@ from contractor_scraper.classification.christmas_light_classifier import (
     ChristmasLightClassifier,
 )
 from contractor_scraper.core.logging import get_logger
-from contractor_scraper.discovery.crawler import CrawlResult, WebsiteCrawler
+from contractor_scraper.discovery.crawler import (
+    SOCIAL_PROFILE_DOMAINS,
+    TRANSIENT_STATUS_CATEGORIES,
+    CrawlerConfig,
+    CrawlResult,
+    WebsiteCrawler,
+)
 
 logger = get_logger("christmas_light_enricher")
 console = Console()
+
+# Live-site failures for which a public archive snapshot is consulted (the site exists but could not be read)
+ARCHIVE_FALLBACK_CATEGORIES: frozenset[str] = TRANSIENT_STATUS_CATEGORIES | frozenset(
+    {"Bot Challenge", "HTTP Error 401", "HTTP Error 403", "HTTP Error 406", "HTTP Error 451", "Redirect Loop"}
+)
+MAX_ARCHIVE_AGE_YEARS = 4
 
 HOLIDAY_PRIORITY_KEYWORDS: list[str] = [
     "/christmas",
     "/holiday",
     "/holiday-lighting",
     "/christmas-lights",
+    "/permanent-lighting",
     "/seasonal-lighting",
     "/lighting",
     "/services",
@@ -52,11 +74,62 @@ HOLIDAY_PRIORITY_KEYWORDS: list[str] = [
     "/exterior-lighting",
     "/residential",
     "/commercial",
+    "/gallery",
+    "/faq",
     "/about",
     "/contact",
     "/quote",
     "/estimate",
 ]
+
+# Output files (written inside the Christmas Light Installation output folder)
+OUTPUT_FILENAMES: dict[str, str] = {
+    "Yes": "qualified_leads.csv",
+    "No": "not_qualified_leads.csv",
+    "Uncertain": "uncertain_leads.csv",
+    "Unreachable": "unreachable_leads.csv",
+}
+ALL_LEADS_FILENAME = "all_leads.csv"
+CHECKPOINT_FILENAME = "crawl_checkpoint.jsonl"
+REPORT_FILENAME = "run_report.json"
+
+ENRICHMENT_HEADERS: list[str] = [
+    "Qualification_Status",
+    "Christmas_Light_Installation",
+    "Holiday_Light_Installation",
+    "Permanent_Decorative_Lighting_Installation",
+    "Evidence_URLs",
+    "Evidence_Summary",
+    "Service_Keywords_Found",
+    "Crawl_Status",
+    "Classification_Confidence",
+]
+
+# Hosted-platform roots where only the full profile path identifies the business
+PROFILE_PLATFORM_HOSTS: frozenset[str] = SOCIAL_PROFILE_DOMAINS | frozenset({"sites.google.com"})
+
+
+def christmas_crawler_config(read_timeout: float = 20.0) -> CrawlerConfig:
+    """Patient, thorough crawl profile for holiday-lighting qualification."""
+    read_timeout = max(5.0, read_timeout)
+    return CrawlerConfig(
+        connect_timeout=min(15.0, max(8.0, read_timeout * 0.6)),
+        read_timeout=read_timeout,
+        domain_timeout=max(120.0, read_timeout * 7.0),
+        max_retries=3,
+        backoff_base=2.0,
+        backoff_max=20.0,
+        per_domain_concurrency=3,
+        request_delay=0.35,
+        max_deep_pages=6,
+        max_probe_pages=6,
+        respect_robots_txt=True,
+        use_sitemap=True,
+        max_sitemap_pages=5,
+        impersonate_search_bot_on_challenge=False,
+        render_javascript=True,
+        cache_namespace="crawler_christmas_v2",
+    )
 
 
 @dataclass
@@ -66,13 +139,26 @@ class ChristmasEnrichmentTelemetry:
     input_file: str
     output_dir: str
     total_records: int = 0
+    duplicate_rows_removed: int = 0
+    unique_websites: int = 0
     records_processed: int = 0
-    qualified_count: int = 0  # Yes (Production)
+    qualified_count: int = 0  # Yes (Qualified)
     not_qualified_count: int = 0  # No (Excluded)
     uncertain_count: int = 0  # Uncertain
     unreachable_count: int = 0  # Unreachable
+    websites_evaluated: int = 0  # websites whose content was successfully evaluated
+    websites_from_checkpoint: int = 0
+    archived_evaluations: int = 0  # verdicts based on a Wayback Machine snapshot
+    retried_websites: int = 0
     recovered_unreachable_count: int = 0
     duration_seconds: float = 0.0
+    output_files: dict[str, str] = field(default_factory=dict)
+    persistent_failures: list[dict[str, str]] = field(default_factory=list)
+    validation: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def qualification_rate(self) -> float:
+        return (self.qualified_count / self.records_processed * 100.0) if self.records_processed else 0.0
 
     def print_summary(self) -> None:
         """Render a clean summary table to the console."""
@@ -87,52 +173,76 @@ class ChristmasEnrichmentTelemetry:
 
         total = max(1, self.records_processed)
         table.add_row(
-            "[bold green]Qualified Contractors (Production / Yes)[/bold green]",
+            "[bold green]Qualified[/bold green]",
             f"[bold green]{self.qualified_count:,}[/bold green]",
             f"[bold green]{(self.qualified_count / total * 100):.1f}%[/bold green]",
         )
         table.add_row(
-            "[bold yellow]Not Qualified / Excluded (No)[/bold yellow]",
+            "[bold yellow]Not Qualified[/bold yellow]",
             f"[bold yellow]{self.not_qualified_count:,}[/bold yellow]",
             f"{(self.not_qualified_count / total * 100):.1f}%",
         )
         table.add_row(
-            "[bold magenta]Uncertain / Insufficient Evidence[/bold magenta]",
+            "[bold magenta]Uncertain (needs verification)[/bold magenta]",
             f"[bold magenta]{self.uncertain_count:,}[/bold magenta]",
             f"{(self.uncertain_count / total * 100):.1f}%",
         )
         table.add_row(
-            "[bold red]Unreachable / Connection Errors[/bold red]",
+            "[bold red]Unreachable[/bold red]",
             f"[bold red]{self.unreachable_count:,}[/bold red]",
             f"{(self.unreachable_count / total * 100):.1f}%",
         )
         table.add_section()
-        table.add_row("Total Records Examined", f"{self.total_records:,}", "100.0%")
-        table.add_row("Total Processed", f"{self.records_processed:,}", "100.0%")
-        table.add_row("Execution Duration", f"{self.duration_seconds:.2f}s", "-")
+        table.add_row("Input rows", f"{self.total_records:,}", "-")
+        table.add_row("Exact duplicate rows removed", f"{self.duplicate_rows_removed:,}", "-")
+        table.add_row("Leads classified", f"{self.records_processed:,}", "100.0%")
+        table.add_row("Unique websites", f"{self.unique_websites:,}", "-")
+        table.add_row("Websites successfully evaluated", f"{self.websites_evaluated:,}", "-")
+        table.add_row("Evaluated via archived snapshot", f"{self.archived_evaluations:,}", "-")
+        table.add_row("Websites retried (patient pass)", f"{self.retried_websites:,}", "-")
+        table.add_row("Recovered on retry", f"{self.recovered_unreachable_count:,}", "-")
+        table.add_row("QA validation", "PASSED" if self.validation.get("passed") else "FAILED", "-")
+        table.add_row("Execution Duration", f"{self.duration_seconds:.1f}s", "-")
         table.add_row("Output Directory", self.output_dir, "-")
 
         console.print(table)
 
 
+@dataclass
+class _Lead:
+    index: int
+    row: list[str]
+    company: str
+    crawl_url: str
+    crawl_key: str
+
+
 class ChristmasLightLeadEnricher:
-    """Manages reading, crawling, classifying, and saving Christmas light contractor leads."""
+    """Manages reading, crawling, classifying, checkpointing, and saving Christmas light contractor leads."""
 
     def __init__(
         self,
         classifier: ChristmasLightClassifier | None = None,
         crawler: WebsiteCrawler | None = None,
-        concurrency_limit: int = 12,
-        timeout_seconds: float = 12.0,
+        concurrency_limit: int = 8,
+        timeout_seconds: float = 20.0,
+        crawler_config: CrawlerConfig | None = None,
+        max_subpages: int = 10,
+        archive_fallback: bool = True,
     ) -> None:
+        self.archive_fallback = archive_fallback
         self.classifier = classifier or ChristmasLightClassifier()
+        self.crawler_config = crawler_config or christmas_crawler_config(timeout_seconds)
+        self.max_subpages = max_subpages
         self.crawler = crawler or WebsiteCrawler(
             timeout_seconds=timeout_seconds,
-            max_subpages=6,
+            max_subpages=max_subpages,
             priority_keywords=HOLIDAY_PRIORITY_KEYWORDS,
+            config=self.crawler_config,
         )
         self.concurrency_limit = max(1, concurrency_limit)
 
+    # ------------------------------------------------------------------ input handling
     def _identify_columns(
         self, headers: list[str]
     ) -> tuple[int, int, int | None, list[str], int | None, int | None]:
@@ -220,411 +330,555 @@ class ChristmasLightLeadEnricher:
         )
 
     def _normalize_url(self, raw_url: str) -> str:
-        """Clean and normalize URL for HTTP fetching."""
+        """Clean and normalize URL for HTTP fetching (drops query strings and tracking parameters)."""
         if not raw_url:
             return ""
         url = raw_url.strip()
         if "%3f" in url.lower() or "%26" in url.lower():
-            import urllib.parse
-
-            url = urllib.parse.unquote(url)
+            url = unquote(url)
         if not url.startswith("http://") and not url.startswith("https://"):
             url = f"https://{url}"
         parsed = urlparse(url)
-        if not parsed.netloc:
+        if not parsed.netloc or "." not in parsed.netloc:
             return ""
         return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
+    def _select_crawl_url(self, clean_raw: str, raw_raw: str) -> str:
+        """Choose the URL to crawl: the clean website, or a same-domain branch/profile page when more specific."""
+        clean = self._normalize_url(clean_raw)
+        raw = self._normalize_url(raw_raw)
+        if not clean:
+            return raw
+        if not raw:
+            return clean
+        c_dom = urlparse(clean).netloc.lower().replace("www.", "")
+        r_dom = urlparse(raw).netloc.lower().replace("www.", "")
+        if c_dom == r_dom and urlparse(raw).path.strip("/"):
+            # Branch/location landing page (crawler also visits the domain root) or a profile path on a platform
+            return raw
+        return clean
+
+    @staticmethod
+    def _crawl_key(url: str) -> str:
+        parsed = urlparse(url)
+        domain = parsed.netloc.lower().replace("www.", "")
+        if domain in PROFILE_PLATFORM_HOSTS and parsed.path.strip("/"):
+            return f"{domain}{parsed.path.rstrip('/').lower()}"
+        return domain
+
+    @staticmethod
+    def _file_fingerprint(path: Path) -> str:
+        digest = hashlib.sha256()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    # ------------------------------------------------------------------ crawling
+    def _make_patient_crawler(self) -> WebsiteCrawler:
+        """A slower, more forgiving crawler for the second pass over temporary failures."""
+        if type(self.crawler) is not WebsiteCrawler:
+            return self.crawler  # custom/mock crawler: reuse as-is
+        cfg = self.crawler.config
+        patient = replace(
+            cfg,
+            connect_timeout=cfg.connect_timeout * 1.75,
+            read_timeout=cfg.read_timeout * 1.75,
+            domain_timeout=(cfg.domain_timeout or 60.0) * 1.5,
+            max_retries=cfg.max_retries + 1,
+            per_domain_concurrency=max(1, min(2, cfg.per_domain_concurrency)),
+            request_delay=max(cfg.request_delay, 0.75),
+            backoff_base=cfg.backoff_base * 1.5,
+        )
+        patient_crawler = WebsiteCrawler(
+            cache_dir=self.crawler.cache_dir,
+            timeout_seconds=self.crawler.timeout_seconds * 1.75,
+            max_subpages=self.crawler.max_subpages,
+            priority_keywords=self.crawler.priority_keywords,
+            custom_user_agent=self.crawler.custom_user_agent,
+            config=patient,
+        )
+        patient_crawler.archive_throttle = self.crawler.archive_throttle
+        return patient_crawler
+
+    async def _evaluate(
+        self, crawler: WebsiteCrawler, url: str, company: str
+    ) -> ChristmasLightClassificationResult:
+        try:
+            crawl_res: CrawlResult = await crawler.crawl_domain(url)
+            result = self.classifier.evaluate_crawl(crawl_res, company_name=company)
+            if (
+                result.classification == "Unreachable"
+                and self.archive_fallback
+                and type(crawler) is WebsiteCrawler
+                and crawl_res.status_category in ARCHIVE_FALLBACK_CATEGORIES
+            ):
+                archived = await crawler.crawl_archived(url)
+                if archived is not None:
+                    return self._classify_archived(archived, crawl_res, result, company)
+            return result
+        except Exception as exc:
+            logger.debug(f"Error evaluating {url}: {exc}")
+            return ChristmasLightClassificationResult(
+                classification="Unreachable",
+                decision_label="Uncertain",
+                confidence=0.0,
+                website_status="Connection Error",
+                reasoning=f"Unexpected error visiting {url}: {exc}",
+                access_error=str(exc),
+            )
+
+    def _classify_archived(
+        self,
+        archived: CrawlResult,
+        live: CrawlResult,
+        live_result: ChristmasLightClassificationResult,
+        company: str,
+    ) -> ChristmasLightClassificationResult:
+        """Classify an archived snapshot, discounting confidence and refusing to decide on stale snapshots."""
+        res = self.classifier.evaluate_crawl(archived, company_name=company)
+        ts = archived.archived_snapshot
+        snap_date = f"{ts[:4]}-{ts[4:6]}-{ts[6:8]}" if len(ts) >= 8 else "unknown date"
+        age_years = datetime.now().year - int(ts[:4]) if ts[:4].isdigit() else 99
+        prefix = (
+            f"Live site unavailable ({live.status_category}: {(live.error_message or '')[:120]}); "
+            f"evaluated Wayback Machine snapshot from {snap_date}. "
+        )
+        res.website_status = f"Archived Copy (live: {live.status_category})"
+        res.access_error = live_result.access_error
+        res.confidence = round(res.confidence * 0.9, 3)
+
+        if res.classification in ("Yes", "No") and age_years > MAX_ARCHIVE_AGE_YEARS:
+            verdict = "showed" if res.classification == "Yes" else "did not show"
+            res.classification = "Uncertain"
+            res.decision_label = "Uncertain"
+            res.confidence = 0.35
+            res.reasoning = (
+                f"{prefix}The most recent usable snapshot is over {MAX_ARCHIVE_AGE_YEARS} years old and {verdict} "
+                f"qualifying services; current offering needs verification. Archived finding: {res.reasoning}"
+            )
+            return res
+        if res.classification == "Unreachable":
+            return live_result
+        res.reasoning = prefix + res.reasoning
+        return res
+
+    @staticmethod
+    def _needs_retry(res: ChristmasLightClassificationResult) -> bool:
+        if res.website_status.startswith("Archived Copy"):
+            return any(f"live: {cat}" in res.website_status for cat in TRANSIENT_STATUS_CATEGORIES)
+        if res.classification == "Unreachable":
+            return res.website_status in TRANSIENT_STATUS_CATEGORIES
+        if res.classification == "Uncertain":
+            return "incomplete" in (res.crawl_details or "") or "could not be evaluated" in res.reasoning
+        return False
+
+    # ------------------------------------------------------------------ output
+    @staticmethod
+    def _crawl_status(res: ChristmasLightClassificationResult) -> str:
+        status = res.website_status or ""
+        if res.crawl_details:
+            status = f"{status} | {res.crawl_details}"
+        if res.classification == "Unreachable" and res.access_error:
+            status = f"{status} | {res.access_error[:300]}"
+        return status
+
+    def _enrichment_values(self, res: ChristmasLightClassificationResult | None) -> list[str]:
+        if res is None:
+            return ["Pending"] + [""] * (len(ENRICHMENT_HEADERS) - 1)
+        return [
+            res.qualification_status,
+            res.christmas_service,
+            res.holiday_service,
+            res.permanent_service,
+            " | ".join(res.evidence_urls),
+            res.reasoning,
+            "; ".join(res.keywords_found or res.evidence_phrases),
+            self._crawl_status(res),
+            f"{res.confidence:.2f}",
+        ]
+
+    # ------------------------------------------------------------------ main pipeline
     async def process_leads(
         self,
         input_csv_path: str | Path,
-        output_dir: str | Path = "christmas light installation/output",
+        output_dir: str | Path | None = None,
         limit: int | None = None,
         resume: bool = True,
         retry_unreachable: bool = True,
+        second_pass: bool = True,
     ) -> ChristmasEnrichmentTelemetry:
-        """Classify contractor leads in input CSV and write 4 categorized output CSV files."""
+        """Classify contractor leads in the input CSV and write 4 categorized output CSV files."""
         start_time = time.time()
+        # Per-request HTTP logs would drown the progress display
+        logging.getLogger("httpx").setLevel(logging.WARNING)
         in_path = Path(input_csv_path)
-        out_dir = Path(output_dir)
-
         if not in_path.exists():
             raise FileNotFoundError(f"Input CSV file not found: {in_path}")
-
+        out_dir = Path(output_dir) if output_dir else in_path.parent / "output" / in_path.stem
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        # Output CSV file paths - exact standard filenames requested by user
-        qualified_csv = out_dir / "Qualified Leads.csv"
-        not_qualified_csv = out_dir / "Not Qualified Leads.csv"
-        uncertain_csv = out_dir / "Uncertain.csv"
-        unreachable_csv = out_dir / "Unreachable Leads.csv"
-        all_csv = out_dir / "All Leads.csv"
-
-        # Also maintain legacy file names for backwards compatibility with existing test fixtures
-        legacy_qualified_csv = out_dir / "christmas_installation_qualified.csv"
-        legacy_not_qualified_csv = out_dir / "christmas_installation_not_qualified.csv"
-        legacy_uncertain_csv = out_dir / "christmas_installation_uncertain.csv"
-        legacy_unreachable_csv = out_dir / "christmas_installation_unreachable.csv"
-        legacy_all_csv = out_dir / "christmas_installation_all.csv"
+        output_paths = {cls: out_dir / name for cls, name in OUTPUT_FILENAMES.items()}
+        all_csv = out_dir / ALL_LEADS_FILENAME
+        checkpoint_path = out_dir / CHECKPOINT_FILENAME
+        report_path = out_dir / REPORT_FILENAME
 
         # Read input CSV preserving all rows and formatting
-        with open(in_path, mode="r", encoding="utf-8", errors="replace", newline="") as f:
+        with open(in_path, encoding="utf-8-sig", errors="replace", newline="") as f:
             reader = csv.reader(f)
             try:
                 raw_headers = next(reader)
             except StopIteration:
                 raise ValueError(f"Input CSV file is empty: {in_path}") from None
+            all_raw_rows = [r for r in reader if any(cell.strip() for cell in r)]
 
-            all_raw_rows = list(reader)
+        web_idx, name_idx, existing_class_idx, base_headers, raw_web_idx, alt_name_idx = self._identify_columns(raw_headers)
 
-        col_info = self._identify_columns(raw_headers)
-        web_idx, name_idx, existing_class_idx, base_headers = col_info[:4]
-        raw_web_idx = col_info[4] if len(col_info) > 4 else None
-        alt_name_idx = col_info[5] if len(col_info) > 5 else None
-
-        # Define output headers: all original headers + explicit classification and diagnostic fields
-        target_class_header = "Does this company provide Christmas light installation?"
-        extra_headers = [
-            target_class_header,
-            "Website status",
-            "Classification reasoning",
-            "Website access error",
-            "Evidence",
-        ]
-
-        # Determine output header layout
+        # Output header layout: original headers + enrichment columns (reused if already present)
         output_headers = list(base_headers)
-        if target_class_header not in output_headers:
-            output_headers.append(target_class_header)
-        for eh in ["Website status", "Classification reasoning", "Website access error", "Evidence"]:
+        for eh in ENRICHMENT_HEADERS:
             if eh not in output_headers:
                 output_headers.append(eh)
+        enrichment_idx = [output_headers.index(eh) for eh in ENRICHMENT_HEADERS]
 
-        classification_col_idx = output_headers.index(target_class_header)
-        status_col_idx = output_headers.index("Website status")
-        reason_col_idx = output_headers.index("Classification reasoning")
-        access_err_col_idx = output_headers.index("Website access error")
-        evidence_col_idx = output_headers.index("Evidence")
-
-        total_rows = len(all_raw_rows)
         target_rows = all_raw_rows[:limit] if limit is not None else all_raw_rows
-        target_count = len(target_rows)
 
-        # Build output row storage
-        evaluated_results: dict[int, ChristmasLightClassificationResult] = {}
-        domain_cache: dict[str, ChristmasLightClassificationResult] = {}
+        # Build lead list, dropping exact duplicate rows
+        leads: list[_Lead] = []
+        seen_rows: set[tuple[str, ...]] = set()
+        duplicates_removed = 0
+        for i, row in enumerate(target_rows):
+            row_key = tuple(c.strip() for c in row)
+            if row_key in seen_rows:
+                duplicates_removed += 1
+                continue
+            seen_rows.add(row_key)
 
-        # Resume support: check if All Leads.csv or christmas_installation_all.csv exists
-        resume_source = None
-        if resume:
-            if all_csv.exists() and all_csv.stat().st_size > 0:
-                resume_source = all_csv
-            elif legacy_all_csv.exists() and legacy_all_csv.stat().st_size > 0:
-                resume_source = legacy_all_csv
+            def cell(idx: int | None, r: list[str] = row) -> str:
+                return r[idx].strip() if idx is not None and idx < len(r) else ""
 
-        if resume_source is not None:
-            try:
-                with open(resume_source, mode="r", encoding="utf-8", errors="replace", newline="") as r_file:
-                    r_reader = csv.reader(r_file)
-                    r_hdrs = next(r_reader, [])
-                    if target_class_header in r_hdrs:
-                        r_c_idx = r_hdrs.index(target_class_header)
-                        for idx_r, r_row in enumerate(r_reader):
-                            if idx_r < target_count and len(r_row) > r_c_idx:
-                                val = r_row[r_c_idx].strip()
-                                res_status = (
-                                    r_row[r_hdrs.index("Website status")]
-                                    if "Website status" in r_hdrs and len(r_row) > r_hdrs.index("Website status")
-                                    else "OK"
-                                )
-                                res_reason = (
-                                    r_row[r_hdrs.index("Classification reasoning")]
-                                    if "Classification reasoning" in r_hdrs
-                                    and len(r_row) > r_hdrs.index("Classification reasoning")
-                                    else ""
-                                )
-                                res_err = (
-                                    r_row[r_hdrs.index("Website access error")]
-                                    if "Website access error" in r_hdrs
-                                    and len(r_row) > r_hdrs.index("Website access error")
-                                    else ""
-                                )
+            company = cell(name_idx) or cell(alt_name_idx)
+            crawl_url = self._select_crawl_url(cell(web_idx), cell(raw_web_idx))
+            lead = _Lead(index=i, row=list(row), company=company, crawl_url=crawl_url, crawl_key=self._crawl_key(crawl_url) if crawl_url else "")
+            leads.append(lead)
 
-                                # If retry_unreachable is True, skip loading Unreachable or Uncertain rows so they get re-evaluated
-                                if retry_unreachable and (
-                                    val in ("Unreachable", "Uncertain")
-                                    or res_status in ("Connection Error", "Timeout", "Bot Challenge")
-                                ):
-                                    continue
-
-                                if val in ("Yes", "No", "Uncertain", "Unreachable"):
-                                    dec_lbl = "Yes" if val == "Yes" else ("No" if val == "No" else "Uncertain")
-                                    res_obj = ChristmasLightClassificationResult(
-                                        classification=val,
-                                        decision_label=dec_lbl,
-                                        confidence=1.0,
-                                        website_status=res_status,
-                                        reasoning=res_reason,
-                                        access_error=res_err,
-                                    )
-                                    evaluated_results[idx_r] = res_obj
-                                    if len(target_rows[idx_r]) > web_idx:
-                                        d_norm = self._normalize_url(target_rows[idx_r][web_idx])
-                                        if d_norm:
-                                            dom = urlparse(d_norm).netloc.lower().replace("www.", "")
-                                            domain_cache[dom] = res_obj
-            except Exception as exc:
-                logger.debug(f"Could not resume from existing results: {exc}")
+        key_to_leads: dict[str, list[_Lead]] = {}
+        for lead in leads:
+            if lead.crawl_key:
+                key_to_leads.setdefault(lead.crawl_key, []).append(lead)
 
         telemetry = ChristmasEnrichmentTelemetry(
             input_file=str(in_path),
             output_dir=str(out_dir),
-            total_records=total_rows,
-            records_processed=len(evaluated_results),
-            qualified_count=sum(1 for r in evaluated_results.values() if r.classification == "Yes"),
-            not_qualified_count=sum(1 for r in evaluated_results.values() if r.classification == "No"),
-            uncertain_count=sum(1 for r in evaluated_results.values() if r.classification == "Uncertain"),
-            unreachable_count=sum(1 for r in evaluated_results.values() if r.classification == "Unreachable"),
+            total_records=len(target_rows),
+            duplicate_rows_removed=duplicates_removed,
+            unique_websites=len(key_to_leads),
         )
+
+        results_by_key: dict[str, ChristmasLightClassificationResult] = {}
+        missing_result = ChristmasLightClassificationResult(
+            classification="Uncertain",
+            decision_label="Uncertain",
+            confidence=0.0,
+            website_status="Missing URL",
+            reasoning="Website URL is empty or invalid in the input record; cannot verify services.",
+        )
+
+        # Resume from checkpoint (only entries recorded for this exact input file)
+        fingerprint = self._file_fingerprint(in_path)
+        if resume and checkpoint_path.exists():
+            try:
+                with open(checkpoint_path, encoding="utf-8") as cf:
+                    for line in cf:
+                        try:
+                            entry = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        if entry.get("fingerprint") != fingerprint or entry.get("key") not in key_to_leads:
+                            continue
+                        results_by_key[entry["key"]] = ChristmasLightClassificationResult.from_dict(entry["result"])
+            except Exception as exc:
+                logger.debug(f"Could not resume from checkpoint: {exc}")
+            if retry_unreachable:
+                for k in [k for k, r in results_by_key.items() if self._needs_retry(r)]:
+                    del results_by_key[k]
+            telemetry.websites_from_checkpoint = len(results_by_key)
+        elif not resume and checkpoint_path.exists():
+            checkpoint_path.unlink()
 
         console.print(
             Panel(
-                f"[bold white]Christmas Light Installation Lead Classification Engine[/bold white]\n"
-                f"[cyan]Input CSV:[/cyan]  {in_path} ([bold yellow]{total_rows:,}[/bold yellow] records)\n"
+                f"[bold white]Christmas / Holiday / Permanent Lighting Lead Classification Engine[/bold white]\n"
+                f"[cyan]Input CSV:[/cyan]  {in_path} ([bold yellow]{len(target_rows):,}[/bold yellow] rows, "
+                f"{duplicates_removed} exact duplicates removed)\n"
+                f"[cyan]Websites:[/cyan]   {len(key_to_leads):,} unique "
+                f"({telemetry.websites_from_checkpoint:,} restored from checkpoint)\n"
                 f"[cyan]Output Dir:[/cyan] {out_dir}\n"
-                f"[cyan]Target:[/cyan]      Processing [bold green]{target_count:,}[/bold green] records "
-                f"(concurrency={self.concurrency_limit}, retry_unreachable={retry_unreachable})",
+                f"[cyan]Settings:[/cyan]   concurrency={self.concurrency_limit}, "
+                f"retries={getattr(getattr(self.crawler, 'config', None), 'max_retries', '-')}, "
+                f"robots.txt respected={getattr(getattr(self.crawler, 'config', None), 'respect_robots_txt', '-')}",
                 border_style="blue",
             )
         )
 
-        semaphore = asyncio.Semaphore(self.concurrency_limit)
         lock = asyncio.Lock()
+        checkpoint_lock = asyncio.Lock()
+        flush_state = {"last": time.time(), "since": 0}
 
-        # Atomic flush function to write all 4 output CSV files + consolidated all_csv
-        def flush_all_csvs() -> None:
-            qualified_rows: list[list[str]] = []
-            not_qualified_rows: list[list[str]] = []
-            uncertain_rows: list[list[str]] = []
-            unreachable_rows: list[list[str]] = []
+        def lead_result(lead: _Lead) -> ChristmasLightClassificationResult | None:
+            if not lead.crawl_key:
+                return missing_result
+            return results_by_key.get(lead.crawl_key)
+
+        def build_out_row(lead: _Lead, res: ChristmasLightClassificationResult | None) -> list[str]:
+            out_row = list(lead.row)
+            while len(out_row) < len(output_headers):
+                out_row.append("")
+            for col, val in zip(enrichment_idx, self._enrichment_values(res), strict=True):
+                out_row[col] = val
+            if res is not None and existing_class_idx is not None and existing_class_idx < len(out_row):
+                out_row[existing_class_idx] = res.decision_label
+            return out_row
+
+        def write_csv(dest: Path, rows: list[list[str]]) -> None:
+            tmp = dest.with_suffix(".tmp")
+            with open(tmp, mode="w", encoding="utf-8-sig", errors="replace", newline="") as wf:
+                w = csv.writer(wf, lineterminator="\n", quoting=csv.QUOTE_MINIMAL)
+                w.writerow(output_headers)
+                w.writerows(rows)
+            tmp.replace(dest)
+
+        def flush_all_csvs() -> dict[str, list[int]]:
+            buckets: dict[str, list[list[str]]] = {cls: [] for cls in OUTPUT_FILENAMES}
+            indexes: dict[str, list[int]] = {cls: [] for cls in OUTPUT_FILENAMES}
             all_rows: list[list[str]] = []
-
-            for r_idx in range(target_count):
-                orig_row = list(target_rows[r_idx])
-                res = evaluated_results.get(r_idx)
-
-                # Construct complete output row with extra fields
-                out_row = list(orig_row)
-                while len(out_row) < len(output_headers):
-                    out_row.append("")
-
-                if res:
-                    out_row[classification_col_idx] = (
-                        res.classification
-                        if res.classification in ("Yes", "No", "Uncertain")
-                        else "Unreachable"
-                    )
-                    # Also populate existing column in original CSV if it exists
-                    if existing_class_idx is not None and existing_class_idx < len(out_row):
-                        out_row[existing_class_idx] = res.decision_label
-
-                    out_row[status_col_idx] = res.website_status
-                    out_row[reason_col_idx] = res.reasoning
-                    out_row[access_err_col_idx] = res.access_error
-                    out_row[evidence_col_idx] = "; ".join(res.evidence_phrases)
-
-                    # Group into separate files
-                    if res.classification == "Yes":
-                        qualified_rows.append(out_row)
-                    elif res.classification == "No":
-                        not_qualified_rows.append(out_row)
-                    elif res.classification == "Uncertain":
-                        uncertain_rows.append(out_row)
-                    elif res.classification == "Unreachable":
-                        unreachable_rows.append(out_row)
-
+            for lead in leads:
+                res = lead_result(lead)
+                out_row = build_out_row(lead, res)
                 all_rows.append(out_row)
+                if res is not None:
+                    cls = res.classification if res.classification in OUTPUT_FILENAMES else "Unreachable"
+                    buckets[cls].append(out_row)
+                    indexes[cls].append(lead.index)
+            for cls, path in output_paths.items():
+                write_csv(path, buckets[cls])
+            write_csv(all_csv, all_rows)
+            return indexes
 
-            def write_file(dest: Path, rows: list[list[str]], legacy_dest: Path | None = None) -> None:
-                tmp = dest.with_suffix(".tmp")
-                with open(tmp, mode="w", encoding="utf-8", errors="replace", newline="") as wf:
-                    w = csv.writer(wf, lineterminator="\n")
-                    w.writerow(output_headers)
-                    w.writerows(rows)
-                tmp.replace(dest)
-                if legacy_dest is not None:
-                    try:
-                        import shutil
-                        shutil.copyfile(dest, legacy_dest)
-                    except Exception as e:
-                        logger.debug(f"Could not copy to legacy file {legacy_dest}: {e}")
-
-            write_file(qualified_csv, qualified_rows, legacy_qualified_csv)
-            write_file(not_qualified_csv, not_qualified_rows, legacy_not_qualified_csv)
-            write_file(uncertain_csv, uncertain_rows, legacy_uncertain_csv)
-            write_file(unreachable_csv, unreachable_rows, legacy_unreachable_csv)
-            write_file(all_csv, all_rows, legacy_all_csv)
-
-        # Initial flush so files are created immediately
-        flush_all_csvs()
-        last_flush_time = time.time()
-
-        async def process_record(r_idx: int, progress: Progress, task_id: Any) -> None:
-            nonlocal last_flush_time
-
-            # Skip if already loaded from resume
-            if r_idx in evaluated_results:
-                progress.update(task_id, advance=1)
-                return
-
-            row = target_rows[r_idx]
-
-            # Prioritize specific branch/location landing page if available in raw_web_idx
-            raw_url = ""
-            if raw_web_idx is not None and len(row) > raw_web_idx:
-                candidate_raw = row[raw_web_idx].strip()
-                if candidate_raw:
-                    cand_test = candidate_raw if candidate_raw.startswith(("http://", "https://")) else f"https://{candidate_raw}"
-                    p_test = urlparse(cand_test)
-                    if p_test.path and p_test.path.strip("/"):
-                        raw_url = candidate_raw
-
-            if not raw_url and len(row) > web_idx:
-                raw_url = row[web_idx].strip()
-
-            if not raw_url and raw_web_idx is not None and len(row) > raw_web_idx:
-                raw_url = row[raw_web_idx].strip()
-
-            # Identify company name
-            comp_name = row[name_idx].strip() if len(row) > name_idx else ""
-            if not comp_name and alt_name_idx is not None and len(row) > alt_name_idx:
-                comp_name = row[alt_name_idx].strip()
-
-            if not raw_url:
-                res = ChristmasLightClassificationResult(
-                    classification="Uncertain",
-                    decision_label="Uncertain",
-                    confidence=0.0,
-                    website_status="Missing URL",
-                    reasoning="Website URL is empty or missing in input record",
-                )
-                async with lock:
-                    evaluated_results[r_idx] = res
-                    telemetry.records_processed += 1
-                    telemetry.uncertain_count += 1
-                    progress.update(task_id, advance=1)
-                return
-
-            norm_url = self._normalize_url(raw_url)
-            parsed_domain = urlparse(norm_url).netloc.lower().replace("www.", "")
-
-            # Check domain cache to avoid re-crawling identical websites across multiple contacts
-            cached_res = None
-            async with lock:
-                if parsed_domain in domain_cache:
-                    cached_res = domain_cache[parsed_domain]
-
-            if cached_res:
-                async with lock:
-                    evaluated_results[r_idx] = cached_res
-                    telemetry.records_processed += 1
-                    if cached_res.classification == "Yes":
-                        telemetry.qualified_count += 1
-                    elif cached_res.classification == "No":
-                        telemetry.not_qualified_count += 1
-                    elif cached_res.classification == "Uncertain":
-                        telemetry.uncertain_count += 1
-                    elif cached_res.classification == "Unreachable":
-                        telemetry.unreachable_count += 1
-
-                    progress.update(
-                        task_id,
-                        advance=1,
-                        description=(
-                            f"[cyan]Cached ({telemetry.records_processed}/{target_count}): "
-                            f"{comp_name[:22]} -> {cached_res.classification}[/cyan]"
-                        ),
+        async def record(key: str, res: ChristmasLightClassificationResult, url: str) -> None:
+            async with checkpoint_lock:
+                results_by_key[key] = res
+                with open(checkpoint_path, "a", encoding="utf-8") as cf:
+                    cf.write(
+                        json.dumps(
+                            {"fingerprint": fingerprint, "key": key, "url": url, "ts": datetime.now().isoformat(timespec="seconds"), "result": res.to_dict()}
+                        )
+                        + "\n"
                     )
-                return
-
-            # Perform live resilient crawl and evaluation
-            async with semaphore:
-                progress.update(
-                    task_id,
-                    description=f"[cyan]Evaluating ({r_idx + 1}/{target_count}): {comp_name[:24]}[/cyan]",
-                )
-                try:
-                    crawl_res: CrawlResult = await self.crawler.crawl_domain(norm_url)
-                    class_res: ChristmasLightClassificationResult = self.classifier.evaluate_crawl(
-                        crawl_res, company_name=comp_name
-                    )
-                except Exception as exc:
-                    logger.debug(f"Error evaluating {norm_url}: {exc}")
-                    class_res = ChristmasLightClassificationResult(
-                        classification="Unreachable",
-                        decision_label="Uncertain",
-                        confidence=0.0,
-                        website_status="Connection Error",
-                        reasoning=f"Unexpected error visiting {norm_url}: {exc}",
-                        access_error=str(exc),
-                    )
-
-            async with lock:
-                evaluated_results[r_idx] = class_res
-                domain_cache[parsed_domain] = class_res
-                telemetry.records_processed += 1
-
-                if class_res.classification == "Yes":
-                    telemetry.qualified_count += 1
-                elif class_res.classification == "No":
-                    telemetry.not_qualified_count += 1
-                elif class_res.classification == "Uncertain":
-                    telemetry.uncertain_count += 1
-                elif class_res.classification == "Unreachable":
-                    telemetry.unreachable_count += 1
-
-                color = (
-                    "green"
-                    if class_res.classification == "Yes"
-                    else "yellow"
-                    if class_res.classification == "No"
-                    else "magenta"
-                    if class_res.classification == "Uncertain"
-                    else "red"
-                )
-                progress.update(
-                    task_id,
-                    advance=1,
-                    description=(
-                        f"[{color}]Done ({telemetry.records_processed}/{target_count})[/{color}]: "
-                        f"{comp_name[:20]} -> [{color}]{class_res.classification}[/{color}]"
-                    ),
-                )
-
+                flush_state["since"] += 1
                 now = time.time()
-                if now - last_flush_time > 8.0 or telemetry.records_processed % 20 == 0:
+                if now - flush_state["last"] > 15.0 or flush_state["since"] >= 25:
                     flush_all_csvs()
-                    last_flush_time = now
+                    flush_state["last"] = now
+                    flush_state["since"] = 0
 
-        # Execute with Rich progress bar
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("{task.description}"),
-            BarColumn(bar_width=35),
-            TaskProgressColumn(),
-            MofNCompleteColumn(),
-            TimeElapsedColumn(),
-            TimeRemainingColumn(),
-            console=console,
-        ) as progress:
-            task = progress.add_task("[cyan]Classifying Christmas Light Leads...[/cyan]", total=target_count)
-            tasks = [process_record(i, progress, task) for i in range(target_count)]
-            await asyncio.gather(*tasks)
-
-        # Final atomic flush to ensure everything is saved
+        # Initial flush so files exist immediately (restored results included)
         flush_all_csvs()
 
-        telemetry.duration_seconds = time.time() - start_time
-        telemetry.print_summary()
+        async def run_pass(keys: list[str], crawler: WebsiteCrawler, concurrency: int, label: str) -> None:
+            semaphore = asyncio.Semaphore(concurrency)
+            row_total = sum(len(key_to_leads[k]) for k in keys)
 
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("{task.description}"),
+                BarColumn(bar_width=30),
+                TaskProgressColumn(),
+                MofNCompleteColumn(),
+                TimeElapsedColumn(),
+                TimeRemainingColumn(),
+                console=console,
+            ) as progress:
+                task_id = progress.add_task(f"[cyan]{label}[/cyan]", total=row_total)
+
+                async def process_key(key: str) -> None:
+                    group = key_to_leads[key]
+                    lead = group[0]
+                    async with semaphore:
+                        progress.update(task_id, description=f"[cyan]{label}: {lead.company[:26]}[/cyan]")
+                        res = await self._evaluate(crawler, lead.crawl_url, lead.company)
+                    await record(key, res, lead.crawl_url)
+                    async with lock:
+                        color = {"Yes": "green", "No": "yellow", "Uncertain": "magenta"}.get(res.classification, "red")
+                        progress.update(
+                            task_id,
+                            advance=len(group),
+                            description=f"[{color}]{label}: {lead.company[:22]} -> {res.qualification_status}[/{color}]",
+                        )
+
+                await asyncio.gather(*(process_key(k) for k in keys))
+
+        # Pass 1: every unique website not already restored
+        pending_keys = [k for k in key_to_leads if k not in results_by_key]
+        if pending_keys:
+            await run_pass(pending_keys, self.crawler, self.concurrency_limit, "Crawling")
+
+        # Pass 2: patient re-crawl of temporary failures and incomplete evaluations
+        if second_pass:
+            retry_keys = [k for k in key_to_leads if k in results_by_key and self._needs_retry(results_by_key[k])]
+            if retry_keys:
+                before = {k: results_by_key[k].classification for k in retry_keys}
+                telemetry.retried_websites = len(retry_keys)
+                console.print(f"[bold cyan]Patient retry pass for {len(retry_keys)} website(s) with temporary failures...[/bold cyan]")
+                patient = self._make_patient_crawler()
+                await run_pass(retry_keys, patient, max(2, self.concurrency_limit // 2), "Retrying")
+                telemetry.recovered_unreachable_count = sum(
+                    1
+                    for k in retry_keys
+                    if (before[k] == "Unreachable" and results_by_key[k].classification != "Unreachable")
+                    or (before[k] == "Uncertain" and results_by_key[k].classification in ("Yes", "No"))
+                )
+                if patient is not self.crawler and hasattr(patient, "aclose"):
+                    await patient.aclose()
+
+        if hasattr(self.crawler, "aclose"):
+            try:
+                await self.crawler.aclose()
+            except Exception:
+                pass
+
+        # Final flush + statistics
+        indexes = flush_all_csvs()
+        for lead in leads:
+            res = lead_result(lead)
+            if res is None:
+                continue
+            telemetry.records_processed += 1
+            if res.classification == "Yes":
+                telemetry.qualified_count += 1
+            elif res.classification == "No":
+                telemetry.not_qualified_count += 1
+            elif res.classification == "Uncertain":
+                telemetry.uncertain_count += 1
+            else:
+                telemetry.unreachable_count += 1
+
+        telemetry.websites_evaluated = sum(
+            1 for r in results_by_key.values() if r.classification in ("Yes", "No", "Uncertain") and r.website_status not in ("Missing URL",)
+        )
+        telemetry.archived_evaluations = sum(1 for r in results_by_key.values() if r.website_status.startswith("Archived Copy"))
+        for key, res in results_by_key.items():
+            if res.classification == "Unreachable":
+                lead = key_to_leads[key][0]
+                telemetry.persistent_failures.append(
+                    {
+                        "company": lead.company,
+                        "url": lead.crawl_url,
+                        "status": res.website_status,
+                        "error": (res.access_error or res.reasoning)[:300],
+                        "rows": str(len(key_to_leads[key])),
+                    }
+                )
+
+        telemetry.validation = self._validate_outputs(leads, indexes, output_paths, lead_result)
+        telemetry.output_files = {OUTPUT_FILENAMES[c]: str(p) for c, p in output_paths.items()}
+        telemetry.output_files[ALL_LEADS_FILENAME] = str(all_csv)
+        telemetry.duration_seconds = time.time() - start_time
+
+        self._write_report(report_path, telemetry, leads, lead_result)
+        telemetry.print_summary()
         return telemetry
+
+    # ------------------------------------------------------------------ QA
+    def _validate_outputs(
+        self,
+        leads: list[_Lead],
+        indexes: dict[str, list[int]],
+        output_paths: dict[str, Path],
+        lead_result: Any,
+    ) -> dict[str, Any]:
+        """Verify each lead appears in exactly one output, files round-trip, and qualified leads carry evidence."""
+        expected = {lead.index for lead in leads}
+        placed: dict[int, list[str]] = {}
+        for cls, idx_list in indexes.items():
+            for idx in idx_list:
+                placed.setdefault(idx, []).append(cls)
+        missing = sorted(expected - set(placed))
+        in_multiple = sorted(i for i, c in placed.items() if len(c) > 1)
+
+        file_counts: dict[str, int] = {}
+        file_count_mismatch: list[str] = []
+        for cls, path in output_paths.items():
+            with open(path, encoding="utf-8-sig", newline="") as f:
+                n = max(0, sum(1 for _ in csv.reader(f)) - 1)
+            file_counts[path.name] = n
+            if n != len(indexes[cls]):
+                file_count_mismatch.append(f"{path.name}: wrote {len(indexes[cls])}, read back {n}")
+
+        qualified_without_evidence = [
+            lead.company
+            for lead in leads
+            if (r := lead_result(lead)) is not None and r.classification == "Yes" and not (r.evidence_urls and r.reasoning)
+        ]
+        single_page_rejections = [
+            lead.company
+            for lead in leads
+            if (r := lead_result(lead)) is not None
+            and r.classification == "No"
+            and r.pages_evaluated <= 1
+            and "national retail" not in r.reasoning
+        ]
+
+        passed = not missing and not in_multiple and not file_count_mismatch and not qualified_without_evidence
+        return {
+            "passed": passed,
+            "leads_expected": len(expected),
+            "leads_placed": len(placed),
+            "missing_from_outputs": missing,
+            "in_multiple_outputs": in_multiple,
+            "file_row_counts": file_counts,
+            "file_count_mismatches": file_count_mismatch,
+            "qualified_without_evidence": qualified_without_evidence,
+            "not_qualified_single_page_decisions": len(single_page_rejections),
+        }
+
+    def _write_report(
+        self, report_path: Path, telemetry: ChristmasEnrichmentTelemetry, leads: list[_Lead], lead_result: Any
+    ) -> None:
+        uncertain = [
+            {"company": lead.company, "url": lead.crawl_url, "reason": r.reasoning[:300]}
+            for lead in leads
+            if (r := lead_result(lead)) is not None and r.classification == "Uncertain"
+        ]
+        report = {
+            "generated_at": datetime.now().isoformat(timespec="seconds"),
+            "input_file": telemetry.input_file,
+            "output_dir": telemetry.output_dir,
+            "totals": {
+                "input_rows": telemetry.total_records,
+                "exact_duplicate_rows_removed": telemetry.duplicate_rows_removed,
+                "leads_classified": telemetry.records_processed,
+                "qualified": telemetry.qualified_count,
+                "not_qualified": telemetry.not_qualified_count,
+                "uncertain": telemetry.uncertain_count,
+                "unreachable": telemetry.unreachable_count,
+                "qualification_rate_pct": round(telemetry.qualification_rate, 2),
+                "unique_websites": telemetry.unique_websites,
+                "websites_successfully_evaluated": telemetry.websites_evaluated,
+                "websites_requiring_verification": telemetry.uncertain_count + telemetry.unreachable_count,
+                "websites_retried": telemetry.retried_websites,
+                "recovered_on_retry": telemetry.recovered_unreachable_count,
+                "restored_from_checkpoint": telemetry.websites_from_checkpoint,
+                "evaluated_via_archived_snapshot": telemetry.archived_evaluations,
+            },
+            "output_files": telemetry.output_files,
+            "validation": telemetry.validation,
+            "persistent_crawl_failures": telemetry.persistent_failures,
+            "uncertain_cases": uncertain,
+            "duration_seconds": round(telemetry.duration_seconds, 1),
+        }
+        try:
+            with open(report_path, "w", encoding="utf-8") as f:
+                json.dump(report, f, indent=2)
+        except Exception as exc:
+            logger.debug(f"Could not write run report: {exc}")

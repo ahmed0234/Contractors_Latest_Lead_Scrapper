@@ -246,12 +246,12 @@ def classify_christmas_lights(
         "-i",
         help="Path to input CSV containing Christmas light contractor candidates.",
     ),
-    output_dir: str = typer.Option(
-        "christmas light installation/output",
+    output_dir: str | None = typer.Option(
+        None,
         "--output",
         "--output-dir",
         "-o",
-        help="Directory to save classified and categorized CSV files.",
+        help="Directory for output CSV files (default: <input folder>/output/<input file name>).",
     ),
     limit: int | None = typer.Option(
         None,
@@ -260,10 +260,10 @@ def classify_christmas_lights(
         help="Maximum records to process (for testing or sampling).",
     ),
     concurrency: int = typer.Option(
-        6,
+        8,
         "--concurrency",
         "-c",
-        help="Maximum concurrent asynchronous website crawl workers.",
+        help="Maximum websites crawled concurrently.",
     ),
     resume: bool = typer.Option(
         True,
@@ -271,9 +271,9 @@ def classify_christmas_lights(
         help="Resume processing from already-evaluated output file if it exists.",
     ),
     timeout: float = typer.Option(
-        10.0,
+        20.0,
         "--timeout",
-        help="Timeout in seconds for website crawl requests.",
+        help="Per-request read timeout in seconds (connect and whole-site budgets scale from it).",
     ),
 ) -> None:
     classify_christmas_lights_command(

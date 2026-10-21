@@ -61,8 +61,8 @@ flowchart TD
 # Run the classifier using default input (auto-detects the raw CSV in christmas light installation/)
 python classify_christmas_lights.py
 
-# Optional: Run with custom concurrency and timeout
-python classify_christmas_lights.py --concurrency 16 --timeout 15.0
+# Optional: Run with custom concurrency, request timeout, and retries
+python classify_christmas_lights.py --concurrency 8 --timeout 20 --retries 3
 
 # Optional: Run a test batch on the first 50 leads
 python classify_christmas_lights.py --limit 50
@@ -73,18 +73,20 @@ python classify_christmas_lights.py --output "christmas light installation/outpu
 
 ### Output Files Generated
 
-Outputs are saved directly inside `christmas light installation/output/`:
+Outputs are saved inside `christmas light installation/output/<input file name>/` (override with `--output`):
 
-1. **`Qualified Leads.csv`**: Verified holiday and Christmas lighting installation contractors (including seasonal multi-trades).
-2. **`Not Qualified Leads.csv`**: Excluded businesses (retailers, electricians, event lighting, landscape-only).
-3. **`Unreachable Leads.csv`**: Websites that could not be accessed due to connection errors, DNS failure, or persistent timeouts.
-4. **`Uncertain.csv`**: Leads where available website content is too minimal to make a confident decision.
-5. **`All Leads.csv`**: Consolidated master file with diagnostic columns:
-   - `Does this company provide Christmas light installation?` (`Yes`, `No`, `Uncertain`, `Unreachable`)
-   - `Website status` (`OK`, `Connection Error`, `Timeout`, `Bot Challenge`, etc.)
-   - `Classification reasoning` (Detailed human-readable audit justification)
-   - `Website access error` (Exact network exception if unreachable)
-   - `Evidence` (Exact matched phrases and regex patterns)
+1. **`qualified_leads.csv`**: Confirmed Christmas, holiday, or permanent decorative lighting installation businesses (including seasonal multi-trades).
+2. **`not_qualified_leads.csv`**: Businesses whose evaluated website shows unrelated services only (retailers, electricians, event lighting, landscape-only lighting, attractions).
+3. **`uncertain_leads.csv`**: Ambiguous or insufficient evidence; needs manual verification.
+4. **`unreachable_leads.csv`**: Websites that could not be evaluated after retries (DNS failure, bot challenge, parked domain, robots.txt, persistent timeouts).
+5. **`all_leads.csv`**: Every lead with the enrichment columns.
+6. **`run_report.json`**: Totals, qualification rate, QA validation results, persistent crawl failures, and uncertain cases.
+7. **`crawl_checkpoint.jsonl`**: Incremental per-website results used to resume interrupted runs.
+
+Every file preserves all original input columns and adds:
+`Qualification_Status`, `Christmas_Light_Installation`, `Holiday_Light_Installation`, `Permanent_Decorative_Lighting_Installation` (Yes / No / Unclear), `Evidence_URLs`, `Evidence_Summary`, `Service_Keywords_Found`, `Crawl_Status`, `Classification_Confidence`.
+
+Crawling is patient and polite: configurable timeouts, retries with exponential backoff, per-domain request limits, robots.txt respected, sitemap and deep-link discovery, and a second retry pass for temporary failures. Sites behind bot challenges are never bypassed; a Wayback Machine snapshot is evaluated instead when one exists (confidence-discounted, and snapshots older than 4 years are marked Uncertain).
 
 ---
 

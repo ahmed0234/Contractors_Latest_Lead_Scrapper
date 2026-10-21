@@ -103,11 +103,11 @@ def test_enricher_pipeline_outputs(tmp_path: Path):
     assert telemetry.unreachable_count == 1
 
     # Verify all 4 required CSV files were generated
-    qualified_file = out_dir / "christmas_installation_qualified.csv"
-    not_qualified_file = out_dir / "christmas_installation_not_qualified.csv"
-    uncertain_file = out_dir / "christmas_installation_uncertain.csv"
-    unreachable_file = out_dir / "christmas_installation_unreachable.csv"
-    all_file = out_dir / "christmas_installation_all.csv"
+    qualified_file = out_dir / "qualified_leads.csv"
+    not_qualified_file = out_dir / "not_qualified_leads.csv"
+    uncertain_file = out_dir / "uncertain_leads.csv"
+    unreachable_file = out_dir / "unreachable_leads.csv"
+    all_file = out_dir / "all_leads.csv"
 
     assert qualified_file.exists()
     assert not_qualified_file.exists()
@@ -119,26 +119,26 @@ def test_enricher_pipeline_outputs(tmp_path: Path):
     with open(qualified_file, encoding="utf-8") as f:
         r = list(csv.reader(f))
         header_row = r[0]
-        assert "Does this company provide Christmas light installation?" in header_row
+        assert "Qualification_Status" in header_row
         assert len(r) == 2  # header + 1 qualified lead
         assert r[1][0] == "Holiday Pros LLC"
-        c_idx = header_row.index("Does this company provide Christmas light installation?")
-        assert r[1][c_idx] == "Yes"
+        c_idx = header_row.index("Qualification_Status")
+        assert r[1][c_idx] == "Qualified"
 
     # Read not qualified file
     with open(not_qualified_file, encoding="utf-8") as f:
         r = list(csv.reader(f))
         assert len(r) == 2
         assert r[1][0] == "Light Bulb Superstore"
-        c_idx = r[0].index("Does this company provide Christmas light installation?")
-        assert r[1][c_idx] == "No"
+        c_idx = r[0].index("Qualification_Status")
+        assert r[1][c_idx] == "Not Qualified"
 
     # Read uncertain file
     with open(uncertain_file, encoding="utf-8") as f:
         r = list(csv.reader(f))
         assert len(r) == 2
         assert r[1][0] == "Vague Business"
-        c_idx = r[0].index("Does this company provide Christmas light installation?")
+        c_idx = r[0].index("Qualification_Status")
         assert r[1][c_idx] == "Uncertain"
 
     # Read unreachable file
@@ -146,5 +146,5 @@ def test_enricher_pipeline_outputs(tmp_path: Path):
         r = list(csv.reader(f))
         assert len(r) == 2
         assert r[1][0] == "Dead Link Co"
-        status_idx = r[0].index("Website status")
-        assert r[1][status_idx] == "Timeout"
+        status_idx = r[0].index("Crawl_Status")
+        assert r[1][status_idx].startswith("Timeout")

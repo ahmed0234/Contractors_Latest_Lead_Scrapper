@@ -203,17 +203,17 @@ def test_standard_output_csv_filenames_and_segregation(tmp_path: Path):
     )
 
     # 1. Check exact required filenames exist in output directory
-    qualified_csv = out_dir / "Qualified Leads.csv"
-    not_qualified_csv = out_dir / "Not Qualified Leads.csv"
-    unreachable_csv = out_dir / "Unreachable Leads.csv"
-    uncertain_csv = out_dir / "Uncertain.csv"
-    all_csv = out_dir / "All Leads.csv"
+    qualified_csv = out_dir / "qualified_leads.csv"
+    not_qualified_csv = out_dir / "not_qualified_leads.csv"
+    unreachable_csv = out_dir / "unreachable_leads.csv"
+    uncertain_csv = out_dir / "uncertain_leads.csv"
+    all_csv = out_dir / "all_leads.csv"
 
-    assert qualified_csv.exists(), "Qualified Leads.csv must exist"
-    assert not_qualified_csv.exists(), "Not Qualified Leads.csv must exist"
-    assert unreachable_csv.exists(), "Unreachable Leads.csv must exist"
-    assert uncertain_csv.exists(), "Uncertain.csv must exist"
-    assert all_csv.exists(), "All Leads.csv must exist"
+    assert qualified_csv.exists(), "qualified_leads.csv must exist"
+    assert not_qualified_csv.exists(), "not_qualified_leads.csv must exist"
+    assert unreachable_csv.exists(), "unreachable_leads.csv must exist"
+    assert uncertain_csv.exists(), "uncertain_leads.csv must exist"
+    assert all_csv.exists(), "all_leads.csv must exist"
 
     # 2. Check counts
     # Leads 1, 2, 3 should be Qualified
@@ -229,7 +229,7 @@ def test_standard_output_csv_filenames_and_segregation(tmp_path: Path):
     with open(qualified_csv, encoding="utf-8") as f:
         reader = list(csv.reader(f))
         headers_read = reader[0]
-        assert "Does this company provide Christmas light installation?" in headers_read
+        assert "Qualification_Status" in headers_read
         assert len(reader) == 4  # header + 3 qualified leads
 
         names_qualified = [row[headers_read.index("Company name")] for row in reader[1:]]

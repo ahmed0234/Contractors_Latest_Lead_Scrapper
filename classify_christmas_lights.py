@@ -1,8 +1,12 @@
-"""Clean and classify Christmas and holiday light installation company leads.
+"""Clean and classify Christmas, holiday, and permanent decorative light installation company leads.
 
-Visits company websites to determine genuine on-site installation service providers
-vs. product sellers, wholesale suppliers, unrelated retailers, landscape-only lighting,
-and unreachable sites.
+Thoroughly crawls each company website (navigation, sitemap, holiday/permanent lighting pages) to
+determine genuine installation service providers vs. product sellers, wholesale suppliers, unrelated
+retailers, landscape-only lighting, general electricians, and unreachable sites.
+
+Outputs (inside the Christmas Light Installation output folder):
+    qualified_leads.csv, not_qualified_leads.csv, uncertain_leads.csv, unreachable_leads.csv,
+    all_leads.csv, crawl_checkpoint.jsonl (resume state), run_report.json (QA + summary)
 """
 
 import argparse
@@ -17,7 +21,10 @@ if str(SRC_DIR) not in sys.path:
 
 from contractor_scraper.config.settings import get_settings
 from contractor_scraper.core.logging import setup_logging
-from contractor_scraper.orchestration.christmas_light_enricher import ChristmasLightLeadEnricher
+from contractor_scraper.orchestration.christmas_light_enricher import (
+    ChristmasLightLeadEnricher,
+    christmas_crawler_config,
+)
 
 
 def resolve_default_input_file() -> str:
@@ -51,8 +58,8 @@ def parse_args() -> argparse.Namespace:
         "--output",
         "-o",
         type=str,
-        default="christmas light installation/output",
-        help="Directory to save the categorized output CSV lead files.",
+        default=None,
+        help="Directory for output CSV files (default: christmas light installation/output/<input file name>).",
     )
     parser.add_argument(
         "--limit",
@@ -65,15 +72,33 @@ def parse_args() -> argparse.Namespace:
         "--concurrency",
         "-c",
         type=int,
-        default=12,
-        help="Maximum concurrent asynchronous website crawl workers.",
+        default=8,
+        help="Maximum websites crawled concurrently (each site also has its own per-domain request limit).",
     )
     parser.add_argument(
         "--timeout",
         "-t",
         type=float,
-        default=12.0,
-        help="Per-website crawl timeout in seconds.",
+        default=20.0,
+        help="Per-request read timeout in seconds (connect and whole-site budgets scale from it).",
+    )
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=3,
+        help="Retries with exponential backoff for temporary failures (timeouts, 429, 5xx).",
+    )
+    parser.add_argument(
+        "--max-pages",
+        type=int,
+        default=10,
+        help="Maximum navigation subpages per site (sitemap, deep-link, and probe pages are added on top).",
+    )
+    parser.add_argument(
+        "--no-second-pass",
+        action="store_true",
+        default=False,
+        help="Skip the slower second pass that re-crawls websites with temporary failures.",
     )
     parser.add_argument(
         "--no-resume",
@@ -102,9 +127,13 @@ def main() -> None:
     settings.ensure_directories()
     setup_logging(log_level=settings.log_level, logs_dir=settings.logs_dir)
 
+    config = christmas_crawler_config(args.timeout)
+    config.max_retries = max(0, args.retries)
     enricher = ChristmasLightLeadEnricher(
         concurrency_limit=args.concurrency,
         timeout_seconds=args.timeout,
+        crawler_config=config,
+        max_subpages=args.max_pages,
     )
     asyncio.run(
         enricher.process_leads(
@@ -113,6 +142,7 @@ def main() -> None:
             limit=args.limit,
             resume=not args.no_resume,
             retry_unreachable=args.retry_unreachable,
+            second_pass=not args.no_second_pass,
         )
     )
 

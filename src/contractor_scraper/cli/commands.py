@@ -373,11 +373,11 @@ def enrich_pest_control_command(
 
 def classify_christmas_lights_command(
     input_path: str = "christmas light installation/Christmas Lights Installation.csv",
-    output_dir: str = "christmas light installation/output",
+    output_dir: str | None = None,
     limit: int | None = None,
-    concurrency: int = 6,
+    concurrency: int = 8,
     resume: bool = True,
-    timeout: float = 10.0,
+    timeout: float = 20.0,
 ) -> None:
     """Clean and classify Christmas light installation contractor leads from company websites."""
     from contractor_scraper.orchestration.christmas_light_enricher import (

@@ -180,3 +180,60 @@ def test_uncertain_minimal_text():
     assert result.decision_label == "Uncertain"
     assert result.is_qualified is False
     assert "insufficient" in result.reasoning.lower()
+
+
+def test_multitrade_landscaping_with_holiday_decorating_qualified():
+    """Ensure a landscaper who also offers holiday decorating/lighting is qualified, not excluded."""
+    classifier = ChristmasLightClassifier()
+    crawl = CrawlResult(
+        domain="greenlandscapenj.com",
+        base_url="https://greenlandscapenj.com",
+        is_accessible=True,
+        homepage=CrawledPage(
+            url="https://greenlandscapenj.com",
+            status_code=200,
+            title="Green Landscape & Holiday Decorating | New Jersey",
+            meta_description="Lawn care, garden lighting, and full holiday decorating services.",
+            text_content=(
+                "We provide full lawn care, landscape design, pathway lighting, and garden lighting. "
+                "In the winter, our team provides custom holiday decorating, Christmas decor setup and takedown. "
+                "Free estimates. Licensed and insured."
+            ),
+        ),
+        combined_text="lawn care landscape design pathway lighting garden lighting holiday decorating christmas decor setup and takedown free estimates licensed and insured",
+        status_category="OK",
+    )
+
+    result = classifier.evaluate_crawl(crawl, company_name="Green Landscape")
+    assert result.classification == "Yes"
+    assert result.decision_label == "Yes"
+    assert result.is_qualified is True
+
+
+def test_multitrade_electrician_with_holiday_lighting_qualified():
+    """Ensure an electrical contractor who offers holiday lighting is qualified, not excluded as indoor electrical."""
+    classifier = ChristmasLightClassifier()
+    crawl = CrawlResult(
+        domain="brightsparkelectric.com",
+        base_url="https://brightsparkelectric.com",
+        is_accessible=True,
+        homepage=CrawledPage(
+            url="https://brightsparkelectric.com",
+            status_code=200,
+            title="Bright Spark Electric | Commercial & Residential Electricians",
+            meta_description="Recessed lighting, panel upgrades, and seasonal holiday lighting installation.",
+            text_content=(
+                "Residential electrical contractor offering panel upgrades, ceiling fans, and recessed lighting. "
+                "We also offer professional holiday lighting and permanent exterior lighting for homes. "
+                "Contact our installation crew for a free quote."
+            ),
+        ),
+        combined_text="panel upgrades ceiling fans recessed lighting holiday lighting permanent exterior lighting free quote",
+        status_category="OK",
+    )
+
+    result = classifier.evaluate_crawl(crawl, company_name="Bright Spark Electric")
+    assert result.classification == "Yes"
+    assert result.decision_label == "Yes"
+    assert result.is_qualified is True
+
