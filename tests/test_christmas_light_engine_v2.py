@@ -206,15 +206,17 @@ def test_permanent_landscape_lighting_is_not_permanent_decorative_lighting() -> 
     assert "landscape" in result.reasoning.lower()
 
 
-def test_permanent_lighting_mention_without_installation_is_uncertain() -> None:
+def test_electrician_blog_about_permanent_lighting_is_rejected() -> None:
+    """A generic "permanent lighting" mention in an electrician's blog is not a decorative lighting service."""
     text = (
         "Smith Electric handles panel upgrades and rewiring. Read our blog: what homeowners should know about "
         "permanent lighting trends this year. " * 3
     )
     crawl = _crawl("smithelectric.com", [("https://smithelectric.com/blog/trends", "Blog | Smith Electric", text)])
     result = ChristmasLightClassifier().evaluate_crawl(crawl)
-    assert result.classification == "Uncertain"
-    assert result.permanent_service == "Unclear"
+    assert result.classification == "No"
+    assert result.qualification_status == "Rejected"
+    assert result.permanent_service == "No"
 
 
 def test_trimlight_dealer_qualifies_as_permanent_decorative_lighting() -> None:

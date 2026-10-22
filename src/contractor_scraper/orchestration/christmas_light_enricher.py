@@ -40,6 +40,7 @@ from rich.progress import (
 from rich.table import Table
 
 from contractor_scraper.classification.christmas_light_classifier import (
+    CLASSIFIER_VERSION,
     ChristmasLightClassificationResult,
     ChristmasLightClassifier,
 )
@@ -90,14 +91,24 @@ OUTPUT_FILENAMES: dict[str, str] = {
     "Unreachable": "unreachable_leads.csv",
 }
 ALL_LEADS_FILENAME = "all_leads.csv"
+# Extra column written to all_leads.csv only (the per-category sheets keep their structure)
+NICHE_COLUMN = "is our niche company ?"
+NICHE_VALUES: dict[str, str] = {
+    "Yes": "yes",
+    "No": "no",
+    "Uncertain": "uncertain",
+    "Unreachable": "unreachable",
+}
 CHECKPOINT_FILENAME = "crawl_checkpoint.jsonl"
 REPORT_FILENAME = "run_report.json"
 
 ENRICHMENT_HEADERS: list[str] = [
-    "Qualification_Status",
+    "Qualification_Status",  # Qualified | Rejected | Needs Review | Unverified
+    "Qualified_Niches",
     "Christmas_Light_Installation",
     "Holiday_Light_Installation",
     "Permanent_Decorative_Lighting_Installation",
+    "Roofline_Lighting_Installation",
     "Evidence_URLs",
     "Evidence_Summary",
     "Service_Keywords_Found",
@@ -128,7 +139,9 @@ def christmas_crawler_config(read_timeout: float = 20.0) -> CrawlerConfig:
         max_sitemap_pages=5,
         impersonate_search_bot_on_challenge=False,
         render_javascript=True,
-        cache_namespace="crawler_christmas_v2",
+        block_separators=True,
+        # v3: page text now keeps block separators, so v2 cache entries are not comparable
+        cache_namespace="crawler_christmas_v3",
     )
 
 
@@ -178,17 +191,17 @@ class ChristmasEnrichmentTelemetry:
             f"[bold green]{(self.qualified_count / total * 100):.1f}%[/bold green]",
         )
         table.add_row(
-            "[bold yellow]Not Qualified[/bold yellow]",
+            "[bold yellow]Rejected (not_qualified_leads.csv)[/bold yellow]",
             f"[bold yellow]{self.not_qualified_count:,}[/bold yellow]",
             f"{(self.not_qualified_count / total * 100):.1f}%",
         )
         table.add_row(
-            "[bold magenta]Uncertain (needs verification)[/bold magenta]",
+            "[bold magenta]Needs Review (uncertain_leads.csv)[/bold magenta]",
             f"[bold magenta]{self.uncertain_count:,}[/bold magenta]",
             f"{(self.uncertain_count / total * 100):.1f}%",
         )
         table.add_row(
-            "[bold red]Unreachable[/bold red]",
+            "[bold red]Unverified (unreachable_leads.csv)[/bold red]",
             f"[bold red]{self.unreachable_count:,}[/bold red]",
             f"{(self.unreachable_count / total * 100):.1f}%",
         )
@@ -488,9 +501,11 @@ class ChristmasLightLeadEnricher:
             return ["Pending"] + [""] * (len(ENRICHMENT_HEADERS) - 1)
         return [
             res.qualification_status,
+            "; ".join(res.qualified_niches),
             res.christmas_service,
             res.holiday_service,
             res.permanent_service,
+            res.roofline_service,
             " | ".join(res.evidence_urls),
             res.reasoning,
             "; ".join(res.keywords_found or res.evidence_phrases),
@@ -532,6 +547,14 @@ class ChristmasLightLeadEnricher:
                 raise ValueError(f"Input CSV file is empty: {in_path}") from None
             all_raw_rows = [r for r in reader if any(cell.strip() for cell in r)]
 
+        # A previous all_leads.csv fed back in carries our niche column; drop it so it is recomputed
+        # and never leaks into the per-category sheets
+        stripped = [h.strip() for h in raw_headers]
+        if NICHE_COLUMN in stripped:
+            drop = stripped.index(NICHE_COLUMN)
+            raw_headers = raw_headers[:drop] + raw_headers[drop + 1 :]
+            all_raw_rows = [r[:drop] + r[drop + 1 :] for r in all_raw_rows]
+
         web_idx, name_idx, existing_class_idx, base_headers, raw_web_idx, alt_name_idx = self._identify_columns(raw_headers)
 
         # Output header layout: original headers + enrichment columns (reused if already present)
@@ -540,6 +563,9 @@ class ChristmasLightLeadEnricher:
             if eh not in output_headers:
                 output_headers.append(eh)
         enrichment_idx = [output_headers.index(eh) for eh in ENRICHMENT_HEADERS]
+        # all_leads.csv layout: the shared layout plus the niche column
+        all_headers = [*output_headers, NICHE_COLUMN]
+        niche_idx = len(output_headers)
 
         target_rows = all_raw_rows[:limit] if limit is not None else all_raw_rows
 
@@ -596,6 +622,9 @@ class ChristmasLightLeadEnricher:
                             continue
                         if entry.get("fingerprint") != fingerprint or entry.get("key") not in key_to_leads:
                             continue
+                        # Verdicts from older classification rules are re-evaluated, never reused
+                        if entry.get("classifier_version") != CLASSIFIER_VERSION:
+                            continue
                         results_by_key[entry["key"]] = ChristmasLightClassificationResult.from_dict(entry["result"])
             except Exception as exc:
                 logger.debug(f"Could not resume from checkpoint: {exc}")
@@ -640,11 +669,19 @@ class ChristmasLightLeadEnricher:
                 out_row[existing_class_idx] = res.decision_label
             return out_row
 
-        def write_csv(dest: Path, rows: list[list[str]]) -> None:
+        def build_all_row(out_row: list[str], res: ChristmasLightClassificationResult | None) -> list[str]:
+            all_row = list(out_row)
+            while len(all_row) < len(all_headers):
+                all_row.append("")
+            if res is not None:
+                all_row[niche_idx] = NICHE_VALUES.get(res.classification, "unreachable")
+            return all_row
+
+        def write_csv(dest: Path, rows: list[list[str]], headers: list[str] = output_headers) -> None:
             tmp = dest.with_suffix(".tmp")
             with open(tmp, mode="w", encoding="utf-8-sig", errors="replace", newline="") as wf:
                 w = csv.writer(wf, lineterminator="\n", quoting=csv.QUOTE_MINIMAL)
-                w.writerow(output_headers)
+                w.writerow(headers)
                 w.writerows(rows)
             tmp.replace(dest)
 
@@ -655,14 +692,14 @@ class ChristmasLightLeadEnricher:
             for lead in leads:
                 res = lead_result(lead)
                 out_row = build_out_row(lead, res)
-                all_rows.append(out_row)
+                all_rows.append(build_all_row(out_row, res))
                 if res is not None:
                     cls = res.classification if res.classification in OUTPUT_FILENAMES else "Unreachable"
                     buckets[cls].append(out_row)
                     indexes[cls].append(lead.index)
             for cls, path in output_paths.items():
                 write_csv(path, buckets[cls])
-            write_csv(all_csv, all_rows)
+            write_csv(all_csv, all_rows, all_headers)
             return indexes
 
         async def record(key: str, res: ChristmasLightClassificationResult, url: str) -> None:
@@ -671,7 +708,14 @@ class ChristmasLightLeadEnricher:
                 with open(checkpoint_path, "a", encoding="utf-8") as cf:
                     cf.write(
                         json.dumps(
-                            {"fingerprint": fingerprint, "key": key, "url": url, "ts": datetime.now().isoformat(timespec="seconds"), "result": res.to_dict()}
+                            {
+                                "fingerprint": fingerprint,
+                                "classifier_version": CLASSIFIER_VERSION,
+                                "key": key,
+                                "url": url,
+                                "ts": datetime.now().isoformat(timespec="seconds"),
+                                "result": res.to_dict(),
+                            }
                         )
                         + "\n"
                     )

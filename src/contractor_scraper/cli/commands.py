@@ -1,6 +1,7 @@
 """CLI commands and interactive user prompts for the contractor lead engine."""
 
 import asyncio
+import logging
 from datetime import datetime
 
 from rich.console import Console
@@ -400,3 +401,43 @@ def classify_christmas_lights_command(
             resume=resume,
         )
     )
+
+
+def christmas_sunbiz_command(
+    output: str | None = None,
+    years: list[int] | None = None,
+    download: bool = False,
+    scope: str = "focused",
+    limit: int | None = None,
+    max_leads: int | None = None,
+    concurrency: int = 6,
+    resume: bool = True,
+) -> None:
+    """Discover verified Christmas / holiday lighting installers from Sunbiz filings."""
+    from pathlib import Path
+
+    from contractor_scraper.orchestration.christmas_sunbiz_engine import (
+        ChristmasSunbizConfig,
+        ChristmasSunbizLeadEngine,
+        print_engine_summary,
+    )
+
+    settings = get_settings()
+    settings.ensure_directories()
+    setup_logging(log_level=settings.log_level, logs_dir=settings.logs_dir)
+    if settings.log_level != "DEBUG":
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+
+    engine = ChristmasSunbizLeadEngine(
+        config=ChristmasSunbizConfig(
+            output_csv=Path(output) if output else None,
+            years=years,
+            local_only=not download,
+            scope=scope,
+            limit=limit,
+            max_leads=max_leads,
+            concurrency=max(1, concurrency),
+            resume=resume,
+        )
+    )
+    print_engine_summary(asyncio.run(engine.run()))

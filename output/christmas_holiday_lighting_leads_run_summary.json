@@ -1,0 +1,28 @@
+{
+  "output_csv": "D:\\Production Grade\\contractors_finding_scrapper\\output\\christmas_holiday_lighting_leads.csv",
+  "review_csv": "D:\\Production Grade\\contractors_finding_scrapper\\output\\christmas_holiday_lighting_leads_review.csv",
+  "state_file": "D:\\Production Grade\\contractors_finding_scrapper\\output\\christmas_holiday_lighting_leads_state.jsonl",
+  "started_at": "2026-10-21T14:53:13Z",
+  "finished_at": "2026-10-21T15:52:36Z",
+  "duration_seconds": 3563.4,
+  "files_scanned": 1377,
+  "records_scanned": 3103285,
+  "candidates_found": 3527,
+  "skipped_already_processed": 0,
+  "researched": 335,
+  "new_leads": 3,
+  "new_review": 0,
+  "leads_with_email": 1,
+  "total_leads_in_csv": 3,
+  "pending_unwritten_rows": 0,
+  "outcomes": {
+    "no_website_found": 106,
+    "website_not_verified": 144,
+    "not_qualified": 2,
+    "website_unreachable": 37,
+    "search_unavailable": 36,
+    "qualified": 3,
+    "duplicate": 1
+  },
+  "stopped_reason": ""
+}

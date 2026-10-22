@@ -153,6 +153,14 @@ JS_SHELL_MARKERS: tuple[str, ...] = (
     "ng-app",
 )
 
+# Block-level elements whose boundaries become " | " segment separators (CrawlerConfig.block_separators)
+_BLOCK_TAG_PATTERN = re.compile(
+    r"</?(?:p|div|li|ul|ol|nav|header|footer|section|article|aside|main|h[1-6]|br|hr|tr|td|th|table|"
+    r"thead|tbody|dt|dd|dl|blockquote|figure|figcaption|form|fieldset|legend|label|option|select|button|a)\b[^>]*>",
+    re.IGNORECASE,
+)
+_SEPARATOR_RUN_PATTERN = re.compile(r"(?:\s*\|\s*){2,}")
+
 # Social / profile platforms whose pages require login to view; only public metadata is read
 SOCIAL_PROFILE_DOMAINS: frozenset[str] = frozenset({
     "facebook.com",
@@ -308,6 +316,9 @@ class CrawlerConfig:
     max_sitemap_pages: int = 4
     impersonate_search_bot_on_challenge: bool = True
     render_javascript: bool = False  # requires optional `playwright` package
+    # Insert " | " at block-level element boundaries so menu items / list entries / paragraphs stay
+    # separate segments in text_content instead of running together into one pseudo-sentence
+    block_separators: bool = False
     max_page_bytes: int = 2_097_152
     cache_namespace: str = "crawler"
 
@@ -613,6 +624,13 @@ class WebsiteCrawler:
                 unique_cands.append(c)
         return unique_cands
 
+    def _word_count(self, text: str) -> int:
+        """Word count that ignores the segment separators inserted by `block_separators`."""
+        words = text.split()
+        if self.config.block_separators:
+            return sum(1 for w in words if w != "|")
+        return len(words)
+
     def _is_bot_challenge(self, title: str, text: str, html: str = "") -> bool:
         """Detect whether page content is a bot challenge or JavaScript interstitial."""
         combined = f"{title} {text[:2000]} {html[:2500]}".lower()
@@ -667,6 +685,8 @@ class WebsiteCrawler:
             clean_footer = re.sub(
                 r"<(script|style|svg)[^>]*>.*?</\1>", " ", footer_match.group(1), flags=re.I | re.S
             )
+            if self.config.block_separators:
+                clean_footer = _BLOCK_TAG_PATTERN.sub(" | ", clean_footer)
             clean_footer = re.sub(r"<[^>]+>", " ", clean_footer)
             footer_text = " " + " ".join(clean_footer.split())
 
@@ -680,7 +700,11 @@ class WebsiteCrawler:
             raw_json = sm.group(1).strip()
             if raw_json:
                 try:
-                    cleaned_json = re.sub(r'["\{\}\[\]:,]', ' ', raw_json)
+                    if self.config.block_separators:
+                        # Keep each schema value (e.g. one offered service) its own segment
+                        cleaned_json = re.sub(r'["\{\}\[\],]', ' | ', raw_json).replace(":", " ")
+                    else:
+                        cleaned_json = re.sub(r'["\{\}\[\]:,]', ' ', raw_json)
                     schema_text_parts.append(' '.join(cleaned_json.split()))
                 except Exception:
                     pass
@@ -691,9 +715,13 @@ class WebsiteCrawler:
         clean_html = re.sub(r"<style\b[^>]*>[\s\S]*?<\/style>", " ", clean_html, flags=re.IGNORECASE)
         clean_html = re.sub(r"<svg\b[^>]*>[\s\S]*?<\/svg>", " ", clean_html, flags=re.IGNORECASE)
         clean_html = re.sub(r"<noscript\b[^>]*>[\s\S]*?<\/noscript>", " ", clean_html, flags=re.IGNORECASE)
+        if self.config.block_separators:
+            clean_html = _BLOCK_TAG_PATTERN.sub(" | ", clean_html)
         text = re.sub(r"<[^>]+>", " ", clean_html)
         text = html_lib.unescape(text)
         body_text = " ".join(text.split()) + footer_text + schema_text
+        if self.config.block_separators:
+            body_text = _SEPARATOR_RUN_PATTERN.sub(" | ", body_text).strip(" |")
 
         # Extract links
         links_list: list[str] = []
@@ -958,7 +986,7 @@ class WebsiteCrawler:
             title = title or "Bot Verification Required"
             body_text = f"sgcaptcha bot challenge required {body_text}"
 
-        word_count = len(body_text.split())
+        word_count = self._word_count(body_text)
         is_js_shell = word_count < 60 and (
             any(m in html_lower for m in JS_SHELL_MARKERS) or html_lower.count("<script") >= 8
         )
@@ -1143,7 +1171,7 @@ class WebsiteCrawler:
         head = f"{page.title} {page.text_content[:500]}".lower()
         if any(m in head for m in SOFT_404_MARKERS):
             return False
-        if len(page.text_content.split()) < 5:
+        if self._word_count(page.text_content) < 5:
             return False
         if self._is_bot_challenge(page.title, page.text_content):
             return False
@@ -1453,7 +1481,7 @@ class WebsiteCrawler:
 
             # Parked / for-sale domains carry no business content to evaluate
             head_lower = f"{homepage.title} {homepage.text_content[:3000]}".lower()
-            if len(homepage.text_content.split()) < 400 and any(m in head_lower for m in PARKED_DOMAIN_MARKERS):
+            if self._word_count(homepage.text_content) < 400 and any(m in head_lower for m in PARKED_DOMAIN_MARKERS):
                 result = CrawlResult(
                     domain=domain,
                     base_url=successful_root,
@@ -1574,7 +1602,7 @@ class WebsiteCrawler:
             not data.get("is_accessible", False)
             or data.get("status_category", "") in ("Bot Challenge", "Timeout", "Connection Error")
             or data.get("incomplete_reason")
-            or len(combined_text.split()) < 40
+            or self._word_count(combined_text) < 40
             or self._is_bot_challenge("", combined_text)
         ):
             return None
@@ -1712,7 +1740,7 @@ class WebsiteCrawler:
             for ts, original in reversed(rows[-3:]):  # newest first, at most 3 snapshots tried
                 snap_url = f"https://web.archive.org/web/{ts}id_/{original}"
                 page = await self._archive_page(client, snap_url)
-                if page is None or len(page.text_content.split()) < 40:
+                if page is None or self._word_count(page.text_content) < 40:
                     continue
                 head_lower = f"{page.title} {page.text_content[:3000]}".lower()
                 if self._is_bot_challenge(page.title, page.text_content) or any(m in head_lower for m in PARKED_DOMAIN_MARKERS):

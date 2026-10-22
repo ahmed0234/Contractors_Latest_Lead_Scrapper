@@ -9,6 +9,7 @@ Supports:
 """
 
 import asyncio
+import contextvars
 import hashlib
 import json
 import os
@@ -175,6 +176,28 @@ DEFAULT_SEARCH_HEADERS = {
 }
 
 
+class SearchCallStats:
+    """Counts how many search-provider requests actually answered during one discovery call.
+
+    Lets callers tell "the company has no findable website" apart from "every search provider
+    was blocked, rate limited, or timing out" (which is worth retrying later).
+    """
+
+    def __init__(self) -> None:
+        self.responses = 0
+
+
+_search_call_stats: contextvars.ContextVar[SearchCallStats | None] = contextvars.ContextVar(
+    "search_call_stats", default=None
+)
+
+
+def _record_search_response() -> None:
+    stats = _search_call_stats.get()
+    if stats is not None:
+        stats.responses += 1
+
+
 class HTMLAnchorParser(HTMLParser):
     """Fast standard-library HTML parser to extract all href anchors."""
 
@@ -262,6 +285,9 @@ class WebsiteFinder(BaseWebsiteFinder):
     - Non-empty safe disk caching
     """
 
+    # Per-request timeout for public search engines (Bing, DuckDuckGo, Yahoo)
+    search_timeout: httpx.Timeout = httpx.Timeout(connect=1.5, read=2.5, write=1.5, pool=1.5)
+
     def __init__(
         self,
         cache_dir: Path | None = None,
@@ -334,6 +360,7 @@ class WebsiteFinder(BaseWebsiteFinder):
                         timeout=8.0,
                     )
                     if resp.status_code == 200:
+                        _record_search_response()
                         payload = resp.json()
                         kg = payload.get("knowledgeGraph", {})
                         if kg.get("website"):
@@ -382,6 +409,7 @@ class WebsiteFinder(BaseWebsiteFinder):
                         timeout=5.0,
                     )
                     if resp.status_code == 200:
+                        _record_search_response()
                         data = resp.json()
                         for item in data.get("items", []):
                             if item.get("link"):
@@ -418,6 +446,7 @@ class WebsiteFinder(BaseWebsiteFinder):
                         timeout=5.0,
                     )
                     if resp.status_code == 200:
+                        _record_search_response()
                         data = resp.json()
                         for item in data.get("organic_results", []):
                             if item.get("link"):
@@ -458,7 +487,7 @@ class WebsiteFinder(BaseWebsiteFinder):
                 "https://lite.duckduckgo.com/lite/",
                 data={"q": query},
                 headers=DEFAULT_SEARCH_HEADERS,
-                timeout=httpx.Timeout(connect=1.5, read=2.5, write=1.5, pool=1.5),
+                timeout=self.search_timeout,
             )
             if resp.status_code == 429:
                 prg.print_search_rate_limited(provider, 429)
@@ -473,6 +502,7 @@ class WebsiteFinder(BaseWebsiteFinder):
             if resp.status_code != 200:
                 prg.print_search_error(provider, f"HTTP {resp.status_code}")
                 return []
+            _record_search_response()
 
             parser = HTMLAnchorParser()
             parser.feed(resp.text)
@@ -518,7 +548,7 @@ class WebsiteFinder(BaseWebsiteFinder):
                 "https://html.duckduckgo.com/html/",
                 data={"q": query},
                 headers=DEFAULT_SEARCH_HEADERS,
-                timeout=httpx.Timeout(connect=1.5, read=2.5, write=1.5, pool=1.5),
+                timeout=self.search_timeout,
             )
             if resp.status_code == 429:
                 prg.print_search_rate_limited(provider, 429)
@@ -533,6 +563,7 @@ class WebsiteFinder(BaseWebsiteFinder):
             if resp.status_code != 200:
                 prg.print_search_error(provider, f"HTTP {resp.status_code}")
                 return []
+            _record_search_response()
 
             raw_urls = re.findall(
                 r'href=["\'](?:/l/\?uddg=)?(https?://[^"\']+)["\']',
@@ -580,7 +611,7 @@ class WebsiteFinder(BaseWebsiteFinder):
                 "https://search.yahoo.com/search",
                 params={"p": query},
                 headers=DEFAULT_SEARCH_HEADERS,
-                timeout=httpx.Timeout(connect=1.5, read=2.5, write=1.5, pool=1.5),
+                timeout=self.search_timeout,
             )
             if resp.status_code == 429:
                 prg.print_search_rate_limited(provider, 429)
@@ -595,6 +626,7 @@ class WebsiteFinder(BaseWebsiteFinder):
             if resp.status_code != 200:
                 prg.print_search_error(provider, f"HTTP {resp.status_code}")
                 return []
+            _record_search_response()
 
             parser = HTMLAnchorParser()
             parser.feed(resp.text)
@@ -643,7 +675,7 @@ class WebsiteFinder(BaseWebsiteFinder):
                 "https://www.bing.com/search",
                 params={"q": query},
                 headers=DEFAULT_SEARCH_HEADERS,
-                timeout=httpx.Timeout(connect=1.5, read=2.5, write=1.5, pool=1.5),
+                timeout=self.search_timeout,
             )
             if resp.status_code == 429:
                 prg.print_search_rate_limited(provider, 429)
@@ -658,6 +690,7 @@ class WebsiteFinder(BaseWebsiteFinder):
             if resp.status_code != 200:
                 prg.print_search_error(provider, f"HTTP {resp.status_code}")
                 return []
+            _record_search_response()
 
             links: list[str] = []
             for href in re.findall(r'href=["\']([^"\']+)["\']', resp.text):
@@ -855,6 +888,23 @@ class WebsiteFinder(BaseWebsiteFinder):
                 continue
         return None
 
+    def _build_search_queries(
+        self,
+        clean_name: str,
+        city: str,
+        state: str,
+        category: str,
+        street_address: str = "",
+    ) -> list[str]:
+        """Search queries in priority order (only the first two are sent to each provider)."""
+        queries = [
+            f'"{clean_name}" {city} {state}',
+            f"{clean_name} {category} {city} {state}",
+        ]
+        if street_address:
+            queries.append(f'"{clean_name}" {street_address} {city}')
+        return queries
+
     async def find_websites(
         self,
         company_name: str,
@@ -913,12 +963,7 @@ class WebsiteFinder(BaseWebsiteFinder):
         seen_domains: set[str] = set()
         directory_urls: list[str] = []
 
-        queries = [
-            f'"{clean_name}" {city} {state}',
-            f"{clean_name} {category} {city} {state}",
-        ]
-        if street_address:
-            queries.append(f'"{clean_name}" {street_address} {city}')
+        queries = self._build_search_queries(clean_name, city, state, category, street_address)
 
         async with httpx.AsyncClient(
             timeout=httpx.Timeout(connect=1.5, read=3.0, write=1.5, pool=1.5),

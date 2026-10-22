@@ -25,9 +25,13 @@ from contractor_scraper.discovery.crawler import (
 if TYPE_CHECKING:
     from contractor_scraper.discovery.crawler import CrawlResult
 
+# Bumped whenever the rules change so stale checkpointed verdicts are not reused
+CLASSIFIER_VERSION = "2026.10-precision-1"
+
 SERVICE_CHRISTMAS = "christmas"
 SERVICE_HOLIDAY = "holiday"
 SERVICE_PERMANENT = "permanent"
+SERVICE_ROOFLINE = "roofline"
 
 STRONG = "strong"
 MODERATE = "moderate"
@@ -137,12 +141,6 @@ CHRISTMAS_SERVICE_OFFERING_PHRASES: tuple[str, ...] = (
     "custom holiday light design",
     "custom fit holiday lighting",
     "custom fit christmas lights",
-    "christmas decor installation",
-    "christmas decorating services",
-    "christmas decorating service",
-    "holiday decor installation",
-    "holiday decorating services",
-    "holiday decorating service",
     "holiday decor and lighting",
     "christmas decor and lighting",
     "holiday decor & lighting",
@@ -156,7 +154,6 @@ CHRISTMAS_SERVICE_OFFERING_PHRASES: tuple[str, ...] = (
     "roofline christmas lighting",
     "c9 holiday lights",
     "c9 christmas lights",
-    "holiday greenery installation",
     "landscape and holiday lighting",
     "holiday and landscape lighting",
     "holiday & landscape lighting",
@@ -175,22 +172,11 @@ CHRISTMAS_SERVICE_OFFERING_PHRASES: tuple[str, ...] = (
     "lease your christmas lights",
     "christmas light leasing",
     "holiday light leasing",
-    "commercial christmas decorating",
-    "residential christmas decorating",
-    "commercial holiday decorating",
-    "residential holiday decorating",
     # Permanent holiday / decorative lighting systems
     "permanent christmas lights installation",
     "permanent holiday lighting installation",
-    "permanent lighting installation",
-    "permanent lights installation",
-    "permanent led lighting installation",
     "permanent roofline lighting installation",
-    "permanent outdoor lighting installation",
-    "permanent exterior lighting installation",
     "permanent holiday lighting installer",
-    "permanent lighting installer",
-    "permanent lighting installers",
     "permanent decorative lighting",
     "trimlight installation",
     "authorized trimlight dealer",
@@ -243,8 +229,6 @@ CONTEXT_REQUIRED_PHRASES: tuple[str, ...] = (
     "set up and take down",
     "we hang lights",
     "c9 bulb installation",
-    "roofline lighting installation",
-    "perimeter roofline lighting",
     "tree wrapping with lights",
     "tree wrapping holiday lights",
     "trunk and branch wrapping",
@@ -253,13 +237,35 @@ CONTEXT_REQUIRED_PHRASES: tuple[str, ...] = (
 
 _SENT = r"[^.!?|\n]"
 
-# Flexible patterns capturing conversational/marketing phrasing of an installation service
+# Decorating-service phrases: only a target (lighting) service when lights are named in the same passage
+DECOR_SERVICE_PHRASES: tuple[str, ...] = (
+    "christmas decor installation",
+    "christmas decoration installation",
+    "christmas decorating services",
+    "christmas decorating service",
+    "holiday decor installation",
+    "holiday decoration installation",
+    "holiday decorating services",
+    "holiday decorating service",
+    "holiday greenery installation",
+    "commercial christmas decorating",
+    "residential christmas decorating",
+    "commercial holiday decorating",
+    "residential holiday decorating",
+)
+DECOR_LIGHT_CONTEXT = re.compile(
+    r"\b(lights|light\s+displays?|(?:christmas|xmas|holiday|seasonal|string|c9|c7|mini|led)\s+light(?:s|ing)?)\b",
+    re.IGNORECASE,
+)
+
+# Flexible patterns capturing conversational/marketing phrasing of an installation service.
+# Gaps never cross sentence or segment boundaries (_SENT), so separate menu items cannot combine.
 FLEXIBLE_SERVICE_PATTERNS: tuple[tuple[re.Pattern[str], bool], ...] = (
     # (pattern, requires_holiday_context)
-    # Install verb -> Holiday/Christmas -> Lights/Lighting/Decor
+    # Install verb -> Holiday/Christmas -> Lights/Lighting
     (
         re.compile(
-            rf"\b(install|installs|installing|installation|installed|put\s+up|putting\s+up|set\s?up|design\s+and\s+install)\b{_SENT}{{0,60}}?\b(christmas|xmas|holiday|seasonal|festive)\b{_SENT}{{0,40}}?\b(lights?|lighting|decor|decorations?|displays?)\b",
+            rf"\b(install|installs|installing|installation|installed|put\s+up|putting\s+up|design\s+and\s+install)\b{_SENT}{{0,50}}?\b(christmas|xmas|holiday|seasonal)\b{_SENT}{{0,30}}?\b(lights?|lighting|light\s+displays?)\b",
             re.IGNORECASE,
         ),
         False,
@@ -267,15 +273,15 @@ FLEXIBLE_SERVICE_PATTERNS: tuple[tuple[re.Pattern[str], bool], ...] = (
     # Hang / take-down verb -> Holiday/Christmas -> Lights/Lighting (not ornaments or decor items)
     (
         re.compile(
-            rf"\b(hang|hangs|hanging|take\s+down|takedown)\b{_SENT}{{0,40}}?\b(christmas|xmas|holiday|seasonal|festive)\s+(?:\w+\s+)?(lights?|lighting|light\s+displays?)\b",
+            rf"\b(hang|hangs|hanging|take\s+down|takedown)\b{_SENT}{{0,40}}?\b(christmas|xmas|holiday|seasonal)\s+(?:\w+\s+)?(lights?|lighting|light\s+displays?)\b",
             re.IGNORECASE,
         ),
         False,
     ),
-    # Holiday/Christmas -> Lights/Lighting/Decor -> Installation/Contractor noun
+    # Holiday/Christmas -> Lights/Lighting -> Installation/Contractor noun
     (
         re.compile(
-            rf"\b(christmas|xmas|holiday|seasonal|festive)\s+(lights?|lighting|decor|decorating|decorations?)\b{_SENT}{{0,50}}?\b(installation|installations|installer|installers|install|installs|installing|installed|hanging|hanger|hangers|takedown|take[\s-]down|removal|contractors?|crews?|professionals|pros|company|services?|design)\b",
+            rf"\b(christmas|xmas|holiday|seasonal)\s+(lights?|lighting)\b{_SENT}{{0,40}}?\b(installation|installations|installer|installers|install|installs|installing|installed|hanging|hanger|hangers|takedown|take[\s-]down|removal|contractors?|crews?)\b",
             re.IGNORECASE,
         ),
         False,
@@ -283,7 +289,7 @@ FLEXIBLE_SERVICE_PATTERNS: tuple[tuple[re.Pattern[str], bool], ...] = (
     # Complete contractor lifecycle service (hang, maintain, take down, store)
     (
         re.compile(
-            r"\b(hang|install|lease)\b.{1,60}?\b(maintain|maintenance)\b.{1,60}?\b(take\s+down|takedown|remove|removal)\b.{1,60}?\b(store|storage)\b",
+            rf"\b(hang|install|lease)\b{_SENT}{{1,60}}?\b(maintain|maintenance)\b{_SENT}{{1,60}}?\b(take\s+down|takedown|remove|removal)\b{_SENT}{{1,60}}?\b(store|storage)\b",
             re.IGNORECASE,
         ),
         True,
@@ -308,28 +314,68 @@ PERMANENT_HOLIDAY_PATTERN = re.compile(
     re.IGNORECASE,
 )
 PERMANENT_BRAND_PATTERN = re.compile(
-    r"\b(trimlight|trim\s+light|gemstone\s+lights?|jellyfish\s+lighting|everlights|ever\s+lights|oelo(?:\s+lighting)?|haven\s+lighting|celebright|invisa-?lite|watts\s+lights?|pixie\s+lights)\b",
+    r"\b(trimlight|gemstone\s+lights?|jellyfish\s+lighting|everlights|oelo(?:\s+lighting)?|haven\s+lighting|celebright|invisa-?lite)\b",
     re.IGNORECASE,
 )
-ROOFLINE_PATTERN = re.compile(r"\b(roofline|eave|eaves|soffit)\s+(?:led\s+)?(lights?|lighting)\b", re.IGNORECASE)
-ARCHITECTURAL_LED_PATTERN = re.compile(r"\barchitectural\s+(?:led\s+)?(?:permanent\s+)?lighting\b", re.IGNORECASE)
+# Roofline lighting is only a target service when holiday/decorative context confirms it
+# (soffit lights are ordinary recessed fixtures and are deliberately not matched)
+ROOFLINE_PATTERN = re.compile(r"\b(roofline|eave|eaves)\s+(?:led\s+)?(lights?|lighting)\b", re.IGNORECASE)
+ROOFLINE_TERM = re.compile(r"roofline|\beaves?\b", re.IGNORECASE)
+# Words inside a "permanent ... lighting" match that make it decorative by nature
+PERMANENT_DECORATIVE_TERM = re.compile(r"holiday|christmas|xmas|roofline|eave|trim|rgb|smart|track|decorative", re.IGNORECASE)
 
+# Decorative/holiday context near a permanent or roofline lighting mention (the mention itself is masked out)
 PERMANENT_DECOR_CONTEXT = re.compile(
-    r"\b(holiday|holidays|christmas|xmas|roofline|eaves?|soffit|year[\s-]round|every\s+(?:season|holiday|occasion)|color[\s-]?changing|millions\s+of\s+colors|rgb|app[\s-]controlled|smartphone|phone\s+app|game\s+day|halloween|4th\s+of\s+july|invisible|trimlight|gemstone|jellyfish|oelo|everlights|celebright)\b",
+    r"\b(holiday|holidays|christmas|xmas|seasonal\s+lights?|every\s+(?:season|holiday|occasion)|color[\s-]?changing|millions\s+of\s+colou?rs|rgb|app[\s-]controlled|(?:smartphone|phone)\s+app|game\s+day|halloween|4th\s+of\s+july|fourth\s+of\s+july|no\s+more\s+(?:ladders|climbing|hanging)|never\s+(?:climb|hang)|trimlight|gemstone|jellyfish|oelo|everlights|celebright|roofline|eaves)\b",
+    re.IGNORECASE,
+)
+ROOFLINE_DECOR_CONTEXT = re.compile(
+    r"\b(holiday|holidays|christmas|xmas|seasonal|festive|c9|c7|permanent|color[\s-]?changing|rgb|app[\s-]controlled|trimlight|gemstone|jellyfish|oelo|everlights|celebright)\b",
+    re.IGNORECASE,
+)
+PERMANENT_INSTALL_CONTEXT = re.compile(
+    r"\b(install|installs|installed|installing|installation|installer|installers|dealer|authorized|certified|we\s+offer|we\s+provide|we\s+design|"
+    r"we\s+now\s+offer|now\s+offering|(?:our\s+)?new(?:est)?\s+(?:addition|service|offering))\b",
     re.IGNORECASE,
 )
 
 # Generic mentions: located, then upgraded only with corroborating context
-GENERIC_CHRISTMAS_PATTERN = re.compile(
-    r"\b(christmas|xmas)\s+(lights?|lighting|light\s+displays?|decor|decorations?|decorating)\b", re.IGNORECASE
-)
+GENERIC_CHRISTMAS_PATTERN = re.compile(r"\b(christmas|xmas)\s+(lights?|lighting|light\s+displays?)\b", re.IGNORECASE)
 GENERIC_HOLIDAY_PATTERN = re.compile(
-    r"\b(holiday|seasonal|festive)\s+(lights?|lighting|decor|decorations?|decorating|illumination|light\s+displays?)\b",
-    re.IGNORECASE,
+    r"\b(holiday|seasonal)\s+(lights?|lighting|illumination|light\s+displays?)\b", re.IGNORECASE
+)
+# Decorating without lights is not one of the target services; at most it flags a lead for review
+GENERIC_DECOR_PATTERN = re.compile(
+    r"\b(christmas|xmas|holiday|seasonal|festive)\s+(decor|décor|decorations?|decorating)\b", re.IGNORECASE
 )
 
 HOLIDAY_CONTEXT_PATTERN = re.compile(
-    r"\b(christmas|xmas|holiday|holidays|seasonal|festive|permanent\s+(?:\w+\s+)?light)", re.IGNORECASE
+    r"\b(christmas|xmas|holiday|holidays|seasonal\s+light|permanent\s+(?:holiday|christmas|led|roofline)\s+light)", re.IGNORECASE
+)
+LIGHT_WORD_PATTERN = re.compile(r"\b(lights?|lighting|light\s+displays?)\b", re.IGNORECASE)
+# Quote / estimate call-to-action: on a dedicated holiday-lighting page it shows the page sells the service
+PAGE_CTA_PATTERN = re.compile(
+    r"\b(free\s+(?:estimate|quote|consultation|design)|request\s+(?:a|an|your)\s+(?:quote|estimate|consultation)|"
+    r"get\s+(?:a|your)\s+(?:free\s+)?(?:quote|estimate)|schedule\s+(?:a|an|your)\s+(?:consultation|estimate|installation)|"
+    r"book\s+(?:a|an|your)\s+(?:consultation|estimate|installation))\b",
+    re.IGNORECASE,
+)
+# Sentence context showing a lights mention is not an offered installation service
+NON_SERVICE_MENTION_PATTERN = re.compile(
+    r"\b(contest|competition|winners?|giveaway|parade|festival|tour|toy\s+drive|food\s+drive|fundraiser|donat\w*|charity|"
+    r"hazards?|overload\w*|extension\s+cords?|circuits?|outlets?|unplug\w*|breakers?|tips?|safety|safely|light\s+show|"
+    r"drive[\s-]th(?:ru|rough)|tickets?|admission)\b",
+    re.IGNORECASE,
+)
+# A customer chore the business makes unnecessary ("no more hanging Christmas lights") is not that service
+CHORE_CONTEXT_PATTERN = re.compile(
+    r"\b(no\s+more|never\s+again|tired\s+of|instead\s+of|say\s+goodbye\s+to|forget\s+about|without\s+(?:having\s+to|the\s+hassle\s+of)|don't\s+have\s+to|no\s+need\s+to|stop)\W+(?:\w+\W+){0,6}$",
+    re.IGNORECASE,
+)
+STRICT_SERVICE_CONTEXT_PATTERN = re.compile(
+    r"\b(we\s+(?:offer|provide|install|hang|design|specialize|handle)|our\s+(?:team|crews?|installers?)|install(?:s|ed|ing|ation|ations|er|ers)?|"
+    r"hang(?:s|ing)?|takedown|take[\s-]down|removal|free\s+(?:estimate|quote|consultation)|request\s+a\s+quote|get\s+a\s+quote)\b",
+    re.IGNORECASE,
 )
 INSTALL_CONTEXT_PATTERN = re.compile(
     r"\b(install|installs|installed|installing|installation|installer|installers|hang|hanging|hung|dealer|authorized|certified|we\s+offer|we\s+provide|we\s+design|our\s+team|professional(?:ly)?|consultation|free\s+(?:estimate|quote)|get\s+a\s+quote|request\s+a\s+quote|estimate)\b",
@@ -357,10 +403,38 @@ PRODUCT_CONTEXT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# A page whose URL or title is about holiday / permanent decorative lighting itself
+# (not merely "christmas" — e.g. /christmas-trees or /holiday-hours are not lighting pages)
 DEDICATED_PAGE_PATTERN = re.compile(
-    r"(christmas|xmas|holiday|festive|seasonal-light|permanent|roofline|eave|trimlight|gemstone|jellyfish|everlights|oelo|celebright|light-hanging|light-installation|lighting-installation)",
+    r"(christmas|xmas|holiday|seasonal)[\s_-]*(?:light|lighting|lights|decor|decorating|illumination)"
+    r"|permanent[\s_-]*(?:holiday|christmas|xmas|led|roofline|track|lighting|lights)"
+    r"|roofline[\s_-]*light|trimlight|gemstone[\s_-]*light|jellyfish[\s_-]*light|everlights|oelo|celebright"
+    r"|light[\s_-]*hanging|hang[\s_-]*lights",
     re.IGNORECASE,
 )
+
+# Page types whose text describes products or gives advice rather than offering a service
+EDITORIAL_PATH_PATTERN = re.compile(
+    r"/(?:blogs?|posts?|news|articles?|resources|learn|guides?|insights|stories|press|category|categories|tag|tags|tips)(?:/|$)"
+    r"|/\d{4}/\d{1,2}/"
+    r"|[-_](?:tips|safety|how-to|ideas|checklist|mistakes|diy)(?:[-_/.]|$)",
+    re.IGNORECASE,
+)
+EDITORIAL_TITLE_PATTERN = re.compile(r"\b(blog|news)\b", re.IGNORECASE)
+ADVICE_TITLE_PATTERN = re.compile(
+    r"\b(tips?|tricks|how[\s-]+to|safety|safely|guide|checklist|ideas|mistakes|diy|ways\s+to|steps\s+to)\b", re.IGNORECASE
+)
+PRODUCT_PATH_PATTERN = re.compile(r"/(?:products?|collections|shop|store|cart|catalog|catalogue|items?)(?:/|$)", re.IGNORECASE)
+ARCHIVE_PATH_PREFIX = re.compile(r"^/web/\d+[a-z_]*/(?:https?:/+[^/]+)?", re.IGNORECASE)
+
+# Business identity (name / domain / homepage title) centred on holiday or permanent decorative lighting
+IDENTITY_PATTERN = re.compile(
+    r"christmas|xmas|holiday[\s_-]*(?:light|decor)|permanent[\s_-]*light|trimlight|gemstone|jellyfish|everlights|oelo|celebright|twinkle|lights\b",
+    re.IGNORECASE,
+)
+
+# Evidence contexts that never count toward qualification or review
+NON_MEANINGFUL_CONTEXTS = frozenset({"advice", "product", "mention", "generic"})
 
 # Casual holiday mentions that DO NOT indicate light installation services
 CASUAL_HOLIDAY_GREETING_PATTERNS: tuple[re.Pattern[str], ...] = (
@@ -658,7 +732,17 @@ class EvidenceItem:
     service: str  # christmas | holiday | permanent
     strength: str  # strong | moderate | weak
     snippet: str = ""
-    context: str = ""  # "" | "product" | "advice" (mentions that do not describe an offered service)
+    # "" = describes a service. "editorial"/"decor" = would be evidence but is on a blog/article page or
+    # names decorating without lights (review only). "advice"/"product"/"mention"/"generic" never count.
+    context: str = ""
+    base_strength: str = ""  # strength before the context downgrade
+
+    @property
+    def is_meaningful_weak(self) -> bool:
+        """Weak evidence that still justifies manual review (never qualification)."""
+        if self.strength != WEAK or self.context in NON_MEANINGFUL_CONTEXTS:
+            return False
+        return not self.context or self.base_strength in (STRONG, MODERATE)
 
 
 @dataclass
@@ -677,6 +761,7 @@ class ChristmasLightClassificationResult:
     christmas_service: str = SERVICE_FIELD_UNCLEAR
     holiday_service: str = SERVICE_FIELD_UNCLEAR
     permanent_service: str = SERVICE_FIELD_UNCLEAR
+    roofline_service: str = SERVICE_FIELD_UNCLEAR
     evidence_urls: list[str] = field(default_factory=list)
     keywords_found: list[str] = field(default_factory=list)
     pages_evaluated: int = 0
@@ -691,9 +776,22 @@ class ChristmasLightClassificationResult:
     def qualification_status(self) -> str:
         return {
             "Yes": "Qualified",
-            "No": "Not Qualified",
-            "Uncertain": "Uncertain",
-        }.get(self.classification, "Unreachable")
+            "No": "Rejected",
+            "Uncertain": "Needs Review",
+        }.get(self.classification, "Unverified")
+
+    @property
+    def qualified_niches(self) -> list[str]:
+        """Target niches confirmed by evidence (only for Qualified leads)."""
+        if self.classification != "Yes":
+            return []
+        fields = (
+            (self.christmas_service, "Christmas Light Installation"),
+            (self.holiday_service, "Holiday Light Installation"),
+            (self.permanent_service, "Permanent Lighting Installation"),
+            (self.roofline_service, "Roofline Lighting Installation"),
+        )
+        return [name for value, name in fields if value == SERVICE_FIELD_YES]
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -709,6 +807,7 @@ class ChristmasLightClassificationResult:
             "christmas_service": self.christmas_service,
             "holiday_service": self.holiday_service,
             "permanent_service": self.permanent_service,
+            "roofline_service": self.roofline_service,
             "evidence_urls": self.evidence_urls,
             "keywords_found": self.keywords_found,
             "pages_evaluated": self.pages_evaluated,
@@ -725,13 +824,30 @@ def _service_for_term(term: str) -> str:
     t = term.lower()
     if "christmas" in t or "xmas" in t:
         return SERVICE_CHRISTMAS
-    if re.search(r"permanent|trimlight|trim light|gemstone|jellyfish|everlights|ever lights|oelo|haven|celebright|invisa|watts|pixie|roofline|eave|soffit|architectural", t):
+    if re.search(r"permanent|trimlight|gemstone|jellyfish|everlights|oelo|haven|celebright|invisa", t):
         return SERVICE_PERMANENT
+    if re.search(r"roofline|\beaves?\b", t):
+        return SERVICE_ROOFLINE
     return SERVICE_HOLIDAY
 
 
 def _window(text: str, start: int, end: int, radius: int) -> str:
     return text[max(0, start - radius) : min(len(text), end + radius)]
+
+
+def _segment_bounds(text: str, start: int, end: int, radius: int) -> tuple[int, int]:
+    """Bounds of the block segment (between " | " separators) around a match, capped at `radius`."""
+    left = text.rfind("|", max(0, start - radius), start)
+    s = left + 1 if left != -1 else max(0, start - radius)
+    right = text.find("|", end, end + radius)
+    e = right if right != -1 else min(len(text), end + radius)
+    return s, e
+
+
+def _context(text: str, start: int, end: int, radius: int) -> str:
+    """Text of the surrounding segment with the match itself masked out (so a term cannot confirm itself)."""
+    s, e = _segment_bounds(text, start, end, radius)
+    return f"{text[s:start]} … {text[end:e]}"
 
 
 def _snippet(text: str, start: int, end: int, radius: int = 90) -> str:
@@ -752,31 +868,65 @@ class ChristmasLightClassifier:
     """Examines crawled website pages to evaluate Christmas, holiday, and permanent light installation services."""
 
     # ----------------------------------------------------------------- evidence extraction
+    @staticmethod
+    def _page_context(path: str, title: str, lower: str) -> str:
+        """Page-level context: "product" listing, "advice" article, other "editorial" content, or "" (service page)."""
+        path = ARCHIVE_PATH_PREFIX.sub("", path) or "/"
+        if PRODUCT_PATH_PATTERN.search(path) or len(PRODUCT_CONTEXT_PATTERN.findall(lower)) >= 4:
+            return "product"
+        is_root = path.strip("/") == ""
+        if not is_root and ADVICE_TITLE_PATTERN.search(title):
+            return "advice"
+        if EDITORIAL_PATH_PATTERN.search(path) or EDITORIAL_TITLE_PATTERN.search(title):
+            return "advice" if ADVICE_TITLE_PATTERN.search(path.replace("-", " ").replace("_", " ")) else "editorial"
+        return ""
+
     def _page_evidence(self, url: str, title: str, text: str, is_service_business: bool) -> list[EvidenceItem]:
         """Locate keyword matches on one page and grade each one by its surrounding context."""
         raw = f"{title}. {text}"
         lower = raw.lower()
         path = urlparse(url).path.lower()
-        is_dedicated_page = bool(DEDICATED_PAGE_PATTERN.search(path) or DEDICATED_PAGE_PATTERN.search(title.lower()))
-        page_is_product_listing = len(PRODUCT_CONTEXT_PATTERN.findall(lower)) >= 4
+        title_lower = title.lower()
+        is_dedicated_page = bool(DEDICATED_PAGE_PATTERN.search(path) or DEDICATED_PAGE_PATTERN.search(title_lower))
+        page_ctx = self._page_context(path, title_lower, lower)
+        # Dedicated to lighting itself (a /holiday-decor page is dedicated, but not to lighting)
+        is_dedicated_lighting_page = is_dedicated_page and bool(
+            LIGHT_WORD_PATTERN.search(path.replace("-", " ").replace("_", " ")) or LIGHT_WORD_PATTERN.search(title_lower)
+            or re.search(r"trimlight|gemstone|jellyfish|everlights|oelo|celebright", f"{path} {title_lower}")
+        )
+        sells_service_here = not page_ctx and is_service_business and bool(PAGE_CTA_PATTERN.search(lower))
         items: list[EvidenceItem] = []
 
         def negated(start: int) -> bool:
-            return bool(NEGATION_PATTERN.search(lower[max(0, start - 60) : start]))
+            s, _ = _segment_bounds(lower, start, start, 60)
+            return bool(NEGATION_PATTERN.search(lower[s:start]))
 
         def product_context(start: int, end: int, matched: str) -> bool:
             win = _window(lower, start, end, 80)
             return bool(PRODUCT_CONTEXT_PATTERN.search(win)) and not INSTALL_VERB_PATTERN.search(matched)
 
+        def non_service(start: int, end: int) -> bool:
+            return bool(NON_SERVICE_MENTION_PATTERN.search(_context(lower, start, end, 120)))
+
         def mention_context(start: int, end: int, matched: str) -> str:
+            if page_ctx == "product":
+                if not INSTALL_VERB_PATTERN.search(matched):
+                    return "product"
+            elif page_ctx:
+                return page_ctx
             if ADVICE_CONTEXT_PATTERN.search(lower[max(0, start - 40) : start]):
                 return "advice"
+            if INSTALL_VERB_PATTERN.search(matched) and CHORE_CONTEXT_PATTERN.search(lower[max(0, start - 60) : start]):
+                return "mention"
             if product_context(start, end, matched):
                 return "product"
             return ""
 
-        def make(term: str, strength: str, start: int, end: int, service: str | None = None) -> EvidenceItem:
-            ctx = mention_context(start, end, term)
+        def make(
+            term: str, strength: str, start: int, end: int, service: str | None = None, ctx: str | None = None
+        ) -> EvidenceItem:
+            if ctx is None:
+                ctx = mention_context(start, end, term)
             return EvidenceItem(
                 url=url,
                 term=term,
@@ -784,10 +934,11 @@ class ChristmasLightClassifier:
                 strength=WEAK if ctx else strength,
                 snippet=_snippet(raw, start, end),
                 context=ctx,
+                base_strength=strength,
             )
 
-        def add(term: str, strength: str, start: int, end: int, service: str | None = None) -> None:
-            items.append(make(term, strength, start, end, service))
+        def add(term: str, strength: str, start: int, end: int, service: str | None = None, ctx: str | None = None) -> None:
+            items.append(make(term, strength, start, end, service, ctx))
 
         # 1. Explicit installation-service phrases
         for phrase in CHRISTMAS_SERVICE_OFFERING_PHRASES:
@@ -795,10 +946,20 @@ class ChristmasLightClassifier:
             while pos != -1:
                 end = pos + len(phrase)
                 if not negated(pos):
-                    strength = WEAK if product_context(pos, end, phrase) else STRONG
-                    add(phrase, strength, pos, end)
+                    add(phrase, STRONG, pos, end)
                     break
                 pos = lower.find(phrase, end)
+
+        # 1b. Decorating-service phrases: a lighting service only when lights are named in the same passage
+        for phrase in DECOR_SERVICE_PHRASES:
+            pos = lower.find(phrase)
+            if pos == -1 or negated(pos):
+                continue
+            end = pos + len(phrase)
+            if DECOR_LIGHT_CONTEXT.search(_context(lower, pos, end, 200)):
+                add(phrase, STRONG, pos, end)
+            else:
+                add(phrase, MODERATE, pos, end, ctx=mention_context(pos, end, phrase) or "decor")
 
         # 2. Lifecycle phrases that need holiday / permanent-lighting context nearby
         for phrase in CONTEXT_REQUIRED_PHRASES:
@@ -806,63 +967,103 @@ class ChristmasLightClassifier:
             if pos == -1 or negated(pos):
                 continue
             end = pos + len(phrase)
-            has_ctx = bool(HOLIDAY_CONTEXT_PATTERN.search(_window(lower, pos, end, 250))) or is_dedicated_page
-            add(phrase, STRONG if has_ctx else WEAK, pos, end, service=SERVICE_HOLIDAY)
+            ctx_text = _context(lower, pos, end, 250)
+            if (HOLIDAY_CONTEXT_PATTERN.search(ctx_text) and DECOR_LIGHT_CONTEXT.search(ctx_text)) or is_dedicated_lighting_page:
+                add(phrase, STRONG, pos, end, service=SERVICE_HOLIDAY)
+            else:
+                add(phrase, WEAK, pos, end, service=SERVICE_HOLIDAY, ctx="generic")
 
         # 3. Flexible sentence-level service patterns
         for pattern, needs_ctx in FLEXIBLE_SERVICE_PATTERNS:
             for m in pattern.finditer(lower):
                 if negated(m.start()):
                     continue
-                matched = m.group(0)
-                if needs_ctx and not (HOLIDAY_CONTEXT_PATTERN.search(_window(lower, m.start(), m.end(), 200)) or is_dedicated_page):
+                ctx_text = _context(lower, m.start(), m.end(), 200)
+                if needs_ctx and not (
+                    (HOLIDAY_CONTEXT_PATTERN.search(ctx_text) and DECOR_LIGHT_CONTEXT.search(f"{ctx_text} {m.group(0)}"))
+                    or is_dedicated_lighting_page
+                ):
                     continue
-                strength = WEAK if product_context(m.start(), m.end(), matched) else STRONG
-                add(" ".join(matched.split())[:80], strength, m.start(), m.end())
+                matched = " ".join(m.group(0).split())
+                ctx = "mention" if non_service(m.start(), m.end()) else None
+                add(matched[:80], STRONG, m.start(), m.end(), ctx=ctx)
                 break
 
-        # 4. Permanent decorative lighting (decorative context + installation context required)
-        for pattern in (PERMANENT_HOLIDAY_PATTERN, PERMANENT_LIGHTING_PATTERN, PERMANENT_BRAND_PATTERN, ROOFLINE_PATTERN, ARCHITECTURAL_LED_PATTERN):
-            m = pattern.search(lower)
-            if not m or negated(m.start()):
-                continue
-            matched = " ".join(m.group(0).split())
-            win = _window(lower, m.start(), m.end(), 220)
-            decor_ctx = pattern is PERMANENT_HOLIDAY_PATTERN or pattern is PERMANENT_BRAND_PATTERN or bool(PERMANENT_DECOR_CONTEXT.search(win))
-            install_ctx = bool(INSTALL_CONTEXT_PATTERN.search(win)) or (is_dedicated_page and is_service_business)
-            if pattern is ARCHITECTURAL_LED_PATTERN and "permanent" not in win:
-                decor_ctx = False
-            if decor_ctx and install_ctx and not product_context(m.start(), m.end(), win):
-                strength = STRONG
-            elif decor_ctx and is_service_business:
-                strength = MODERATE if is_dedicated_page else WEAK
-            else:
-                strength = WEAK
-            add(matched, strength, m.start(), m.end(), service=SERVICE_PERMANENT)
-
-        # 5. Generic Christmas / holiday lighting mentions, upgraded only with corroborating context
-        for pattern in (GENERIC_CHRISTMAS_PATTERN, GENERIC_HOLIDAY_PATTERN):
+        # 4. Permanent decorative and roofline lighting (decorative context + installation context required).
+        #    The match itself is masked out of its context so e.g. "roofline lighting" cannot confirm itself.
+        rank = {STRONG: 3, MODERATE: 2, WEAK: 1}
+        for pattern in (PERMANENT_HOLIDAY_PATTERN, PERMANENT_LIGHTING_PATTERN, PERMANENT_BRAND_PATTERN, ROOFLINE_PATTERN):
+            is_roofline = pattern is ROOFLINE_PATTERN
+            service = SERVICE_ROOFLINE if is_roofline else SERVICE_PERMANENT
             best: EvidenceItem | None = None
             for m in pattern.finditer(lower):
                 if negated(m.start()):
                     continue
                 matched = " ".join(m.group(0).split())
-                if product_context(m.start(), m.end(), matched) or page_is_product_listing:
-                    strength = WEAK
-                elif is_service_business and is_dedicated_page:
-                    strength = MODERATE
-                elif is_service_business and SERVICE_CONTEXT_PATTERN.search(_window(lower, m.start(), m.end(), 100)):
-                    strength = MODERATE
+                ctx_text = _context(lower, m.start(), m.end(), 220)
+                if is_roofline:
+                    decor_ctx = bool(ROOFLINE_DECOR_CONTEXT.search(ctx_text))
                 else:
-                    strength = WEAK
-                candidate = make(matched, strength, m.start(), m.end())
-                strength = candidate.strength
-                if best is None or (best.strength == WEAK and strength == MODERATE):
+                    decor_ctx = (
+                        pattern is PERMANENT_HOLIDAY_PATTERN
+                        or pattern is PERMANENT_BRAND_PATTERN
+                        or bool(PERMANENT_DECORATIVE_TERM.search(matched))
+                        or bool(PERMANENT_DECOR_CONTEXT.search(ctx_text))
+                    )
+                install_ctx = bool(PERMANENT_INSTALL_CONTEXT.search(ctx_text)) or (is_dedicated_page and is_service_business)
+                if decor_ctx and install_ctx:
+                    candidate = make(matched, STRONG, m.start(), m.end(), service)
+                elif decor_ctx and is_service_business and is_dedicated_page:
+                    candidate = make(matched, MODERATE, m.start(), m.end(), service)
+                elif decor_ctx:
+                    candidate = make(matched, WEAK, m.start(), m.end(), service)
+                else:
+                    candidate = make(matched, WEAK, m.start(), m.end(), service, ctx="generic")
+                if best is None or rank[candidate.strength] > rank[best.strength] or (
+                    best.context == "generic" and candidate.context != "generic"
+                ):
                     best = candidate
-                if strength == MODERATE:
+                if best.strength == STRONG:
                     break
             if best is not None:
                 items.append(best)
+
+        # 5. Generic Christmas / holiday lighting mentions, upgraded only with corroborating context
+        for pattern in (GENERIC_CHRISTMAS_PATTERN, GENERIC_HOLIDAY_PATTERN):
+            best = None
+            for m in pattern.finditer(lower):
+                if negated(m.start()):
+                    continue
+                matched = " ".join(m.group(0).split())
+                if non_service(m.start(), m.end()):
+                    candidate = make(matched, WEAK, m.start(), m.end(), ctx="mention")
+                elif is_dedicated_lighting_page and sells_service_here:
+                    # A service page about holiday lighting itself, with a quote/estimate call to action
+                    candidate = make(matched, STRONG, m.start(), m.end())
+                elif is_service_business and (
+                    is_dedicated_page
+                    or STRICT_SERVICE_CONTEXT_PATTERN.search(_context(lower, m.start(), m.end(), 100))
+                ):
+                    candidate = make(matched, MODERATE, m.start(), m.end())
+                else:
+                    candidate = make(matched, WEAK, m.start(), m.end())
+                if best is None or rank[candidate.strength] > rank[best.strength] or (
+                    best.context and not candidate.context
+                ):
+                    best = candidate
+                if best.strength in (STRONG, MODERATE):
+                    break
+            if best is not None:
+                items.append(best)
+
+        # 6. Decorating mentions without lights: review-only, on a dedicated holiday page of a service business
+        m = GENERIC_DECOR_PATTERN.search(lower)
+        if m and not negated(m.start()):
+            matched = " ".join(m.group(0).split())
+            if is_service_business and is_dedicated_page:
+                add(matched, MODERATE, m.start(), m.end(), ctx=mention_context(m.start(), m.end(), matched) or "decor")
+            else:
+                add(matched, WEAK, m.start(), m.end(), ctx="mention")
 
         return items
 
@@ -885,16 +1086,31 @@ class ChristmasLightClassifier:
             error_msg = crawl.error_message or "Failed to connect to website"
             status_cat = getattr(crawl, "status_category", "Connection Error") or "Connection Error"
 
-            # A blocked page can still expose real metadata (title / description) describing the service
+            # A blocked page can still expose metadata (title / description) describing the service. That is
+            # not enough to verify the offering, so it flags the lead for review instead of qualifying it.
             if crawl.homepage and status_cat != "Parked Domain":
                 head_raw = f"{crawl.homepage.title}. {crawl.homepage.meta_description}"
                 head_items = [
                     i for i in self._page_evidence(crawl.homepage.url or crawl.base_url, "", head_raw, False) if i.strength == STRONG
                 ]
                 if head_items:
-                    return self._qualified(
-                        head_items, [], [], 0.70, status_cat + " (Metadata Verified)", crawl_details, 1,
-                        extra_reason=" Website blocked further access (not bypassed); qualification is based on the site's own published metadata.",
+                    best = head_items[0]
+                    return ChristmasLightClassificationResult(
+                        classification="Uncertain",
+                        decision_label="Uncertain",
+                        confidence=0.45,
+                        website_status=status_cat + " (Metadata Only)",
+                        reasoning=(
+                            f"Website blocked access ({error_msg}; not bypassed). Its published title/description claims "
+                            f"\"{best.term}\" (\"{best.snippet[:160]}\"), but no service page could be inspected; "
+                            "manual verification required."
+                        ),
+                        access_error=error_msg,
+                        evidence_phrases=list(dict.fromkeys(i.term for i in head_items))[:8],
+                        evidence_urls=[crawl.homepage.url or crawl.base_url],
+                        keywords_found=self._keywords(head_items),
+                        pages_evaluated=0,
+                        crawl_details=crawl_details,
                     )
 
             return ChristmasLightClassificationResult(
@@ -919,6 +1135,7 @@ class ChristmasLightClassifier:
                 christmas_service=SERVICE_FIELD_NO,
                 holiday_service=SERVICE_FIELD_NO,
                 permanent_service=SERVICE_FIELD_NO,
+                roofline_service=SERVICE_FIELD_NO,
                 evidence_urls=[crawl.base_url] if crawl.base_url else [],
                 reasoning=(
                     f"Identified as major national retail chain, department store, or public venue ({ncd}). "
@@ -937,7 +1154,7 @@ class ChristmasLightClassifier:
             page_entries.append((crawl.base_url, "", combined))
 
         full_corpus = " ".join(f"{t} {x}" for _, t, x in page_entries).lower()
-        word_count = len(" ".join(x for _, _, x in page_entries).split())
+        word_count = sum(1 for w in " ".join(x for _, _, x in page_entries).split() if w != "|")
 
         found_operations = [p for p in OPERATIONAL_CONTRACTOR_SIGNALS if p in full_corpus]
         found_multi_trade = [k for k in MULTI_TRADE_KEYWORDS if k in full_corpus]
@@ -963,7 +1180,13 @@ class ChristmasLightClassifier:
 
         positive = [e for e in evidence if e.strength in (STRONG, MODERATE)]
         strong = [e for e in evidence if e.strength == STRONG]
+        moderate = [e for e in evidence if e.strength == MODERATE]
         weak = [e for e in evidence if e.strength == WEAK]
+        homepage_title = crawl.homepage.title if crawl.homepage else ""
+        identity_match = bool(IDENTITY_PATTERN.search(f"{company_name or ''} {clean_dom} {homepage_title}"))
+        # Qualification needs an explicit service statement, or listing-level evidence corroborated by a
+        # second page or by a business identity centred on holiday / permanent decorative lighting.
+        qualifies = bool(strong) or len({e.url for e in moderate}) >= 2 or (bool(moderate) and identity_match)
         strong_has_install_verb = any(INSTALL_VERB_PATTERN.search(e.term) for e in strong)
 
         # 5. Disqualifiers (unrelated retail stores, tech, directories, product sellers, attractions)
@@ -1002,7 +1225,7 @@ class ChristmasLightClassifier:
             )
 
         # 6. Positive qualification
-        if positive:
+        if qualifies:
             dedicated_strong = any(
                 e.strength == STRONG and DEDICATED_PAGE_PATTERN.search(urlparse(e.url).path.lower()) for e in positive
             )
@@ -1020,8 +1243,17 @@ class ChristmasLightClassifier:
                 extra_reason=trade_context, disqualifiers=all_disqualifiers, all_evidence=evidence,
             )
 
-        # 7. Weak signals only: ambiguous, needs verification (product listings and DIY/safety tips are not service signals)
-        meaningful_weak = [e for e in weak if not e.context]
+        # 7. Listing-level evidence that is not corroborated: needs manual review, never qualified
+        if moderate:
+            terms = list(dict.fromkeys(e.term for e in moderate))[:4]
+            return self._uncertain(
+                f"Needs review: the site lists {', '.join(repr(t) for t in terms)} ({moderate[0].url}) but no page "
+                "explicitly states a Christmas, holiday, permanent, or roofline lighting installation service.",
+                0.50, crawl, crawl_details, pages_fetched, evidence, thorough=True,
+            )
+
+        # 8. Weak signals only: ambiguous, needs verification (product listings and DIY/safety tips are not service signals)
+        meaningful_weak = [e for e in weak if e.is_meaningful_weak]
         if meaningful_weak:
             terms = list(dict.fromkeys(e.term for e in meaningful_weak))[:4]
             return self._uncertain(
@@ -1030,7 +1262,7 @@ class ChristmasLightClassifier:
                 0.40, crawl, crawl_details, pages_fetched, evidence, thorough=True,
             )
 
-        # 8. No holiday / decorative lighting signals at all
+        # 9. No holiday / decorative lighting signals at all
         is_social = _domain_matches(clean_dom, SOCIAL_PROFILE_DOMAINS) is not None
         if is_social:
             return ChristmasLightClassificationResult(
@@ -1140,22 +1372,31 @@ class ChristmasLightClassifier:
     @staticmethod
     def _service_fields(
         evidence: list[EvidenceItem], thorough: bool
-    ) -> tuple[str, str, str]:
+    ) -> tuple[str, str, str, str]:
         def field_for(service: str) -> str:
             items = [e for e in evidence if e.service == service]
+            if service == SERVICE_ROOFLINE:
+                # Holiday/permanent service evidence that names the roofline ("roofline christmas lights",
+                # "permanent holiday lighting along your roofline")
+                items += [
+                    e for e in evidence
+                    if e.service != service and e.strength in (STRONG, MODERATE)
+                    and (ROOFLINE_TERM.search(e.term) or ROOFLINE_TERM.search(e.snippet))
+                ]
             if any(e.strength in (STRONG, MODERATE) for e in items):
                 return SERVICE_FIELD_YES
-            if items or not thorough:
+            if any(e.context not in NON_MEANINGFUL_CONTEXTS for e in items) or not thorough:
                 return SERVICE_FIELD_UNCLEAR
             return SERVICE_FIELD_NO
 
         christmas = field_for(SERVICE_CHRISTMAS)
         holiday = field_for(SERVICE_HOLIDAY)
         permanent = field_for(SERVICE_PERMANENT)
+        roofline = field_for(SERVICE_ROOFLINE)
         # Christmas light installation is a holiday light installation service
         if christmas == SERVICE_FIELD_YES:
             holiday = SERVICE_FIELD_YES
-        return christmas, holiday, permanent
+        return christmas, holiday, permanent, roofline
 
     @staticmethod
     def _keywords(evidence: list[EvidenceItem]) -> list[str]:
@@ -1186,13 +1427,15 @@ class ChristmasLightClassifier:
         evidence_urls = list(dict.fromkeys(e.url for e in ranked))
         services = []
         all_items = all_evidence if all_evidence is not None else positive + weak
-        christmas, holiday, permanent = self._service_fields(all_items, thorough=True)
+        christmas, holiday, permanent, roofline = self._service_fields(all_items, thorough=True)
         if christmas == SERVICE_FIELD_YES:
             services.append("Christmas light installation")
         if holiday == SERVICE_FIELD_YES and christmas != SERVICE_FIELD_YES:
             services.append("holiday light installation")
         if permanent == SERVICE_FIELD_YES:
             services.append("permanent decorative lighting installation")
+        if roofline == SERVICE_FIELD_YES:
+            services.append("roofline lighting installation")
         best = ranked[0]
         strength_note = "explicit service statement" if best.strength == STRONG else "service listing on a dedicated/contextual page"
         reasoning = (
@@ -1212,6 +1455,7 @@ class ChristmasLightClassifier:
             christmas_service=christmas,
             holiday_service=holiday,
             permanent_service=permanent,
+            roofline_service=roofline,
             evidence_urls=evidence_urls[:6],
             keywords_found=self._keywords(all_items),
             pages_evaluated=pages_fetched,
@@ -1228,7 +1472,7 @@ class ChristmasLightClassifier:
         evidence: list[EvidenceItem],
         disqualifiers: list[str],
     ) -> ChristmasLightClassificationResult:
-        christmas, holiday, permanent = self._service_fields([], thorough=True)
+        christmas, holiday, permanent, roofline = self._service_fields([], thorough=True)
         return ChristmasLightClassificationResult(
             classification="No",
             decision_label="No",
@@ -1239,6 +1483,7 @@ class ChristmasLightClassifier:
             christmas_service=christmas,
             holiday_service=holiday,
             permanent_service=permanent,
+            roofline_service=roofline,
             evidence_urls=self._inspected_urls(crawl),
             keywords_found=self._keywords(evidence),
             pages_evaluated=pages_fetched,
@@ -1255,8 +1500,14 @@ class ChristmasLightClassifier:
         evidence: list[EvidenceItem],
         thorough: bool,
     ) -> ChristmasLightClassificationResult:
-        christmas, holiday, permanent = self._service_fields(evidence, thorough=thorough)
-        weak_urls = list(dict.fromkeys(e.url for e in evidence))
+        # A lead under review has no confirmed service: listing-level "Yes" values are reported as Unclear
+        fields = [
+            SERVICE_FIELD_UNCLEAR if v == SERVICE_FIELD_YES else v
+            for v in self._service_fields(evidence, thorough=thorough)
+        ]
+        christmas, holiday, permanent, roofline = fields
+        relevant = [e for e in evidence if e.strength != WEAK or e.is_meaningful_weak]
+        weak_urls = list(dict.fromkeys(e.url for e in relevant))
         return ChristmasLightClassificationResult(
             classification="Uncertain",
             decision_label="Uncertain",
@@ -1266,6 +1517,7 @@ class ChristmasLightClassifier:
             christmas_service=christmas,
             holiday_service=holiday,
             permanent_service=permanent,
+            roofline_service=roofline,
             evidence_urls=(weak_urls or self._inspected_urls(crawl))[:6],
             keywords_found=self._keywords(evidence),
             pages_evaluated=pages_fetched,

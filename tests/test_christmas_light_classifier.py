@@ -182,8 +182,8 @@ def test_uncertain_minimal_text():
     assert "insufficient" in result.reasoning.lower()
 
 
-def test_multitrade_landscaping_with_holiday_decorating_qualified():
-    """Ensure a landscaper who also offers holiday decorating/lighting is qualified, not excluded."""
+def test_multitrade_landscaping_with_holiday_decorating_only_needs_review():
+    """Holiday decorating without any lights is not a target lighting service: review, never qualify."""
     classifier = ChristmasLightClassifier()
     crawl = CrawlResult(
         domain="greenlandscapenj.com",
@@ -205,9 +205,9 @@ def test_multitrade_landscaping_with_holiday_decorating_qualified():
     )
 
     result = classifier.evaluate_crawl(crawl, company_name="Green Landscape")
-    assert result.classification == "Yes"
-    assert result.decision_label == "Yes"
-    assert result.is_qualified is True
+    assert result.classification == "Uncertain"
+    assert result.qualification_status == "Needs Review"
+    assert result.is_qualified is False
 
 
 def test_multitrade_electrician_with_holiday_lighting_qualified():

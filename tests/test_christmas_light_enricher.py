@@ -131,7 +131,7 @@ def test_enricher_pipeline_outputs(tmp_path: Path):
         assert len(r) == 2
         assert r[1][0] == "Light Bulb Superstore"
         c_idx = r[0].index("Qualification_Status")
-        assert r[1][c_idx] == "Not Qualified"
+        assert r[1][c_idx] == "Rejected"
 
     # Read uncertain file
     with open(uncertain_file, encoding="utf-8") as f:
@@ -139,7 +139,7 @@ def test_enricher_pipeline_outputs(tmp_path: Path):
         assert len(r) == 2
         assert r[1][0] == "Vague Business"
         c_idx = r[0].index("Qualification_Status")
-        assert r[1][c_idx] == "Uncertain"
+        assert r[1][c_idx] == "Needs Review"
 
     # Read unreachable file
     with open(unreachable_file, encoding="utf-8") as f:
@@ -148,3 +148,28 @@ def test_enricher_pipeline_outputs(tmp_path: Path):
         assert r[1][0] == "Dead Link Co"
         status_idx = r[0].index("Crawl_Status")
         assert r[1][status_idx].startswith("Timeout")
+
+    # The niche column lives only in all_leads.csv
+    for category_file in (qualified_file, not_qualified_file, uncertain_file, unreachable_file):
+        with open(category_file, encoding="utf-8-sig") as f:
+            assert "is our niche company ?" not in next(csv.reader(f))
+
+    with open(all_file, encoding="utf-8-sig") as f:
+        r = list(csv.reader(f))
+        assert r[0][-1] == "is our niche company ?"
+        assert r[0][:-1] == [h.lstrip("﻿") for h in header_row]
+        niche = {row[0]: row[-1] for row in r[1:]}
+        assert niche == {
+            "Holiday Pros LLC": "yes",
+            "Light Bulb Superstore": "no",
+            "Vague Business": "uncertain",
+            "Dead Link Co": "unreachable",
+        }
+
+    # Feeding all_leads.csv back in recomputes the column instead of duplicating or leaking it
+    rerun_dir = tmp_path / "rerun"
+    asyncio.run(enricher.process_leads(input_csv_path=all_file, output_dir=rerun_dir, resume=False))
+    with open(rerun_dir / "qualified_leads.csv", encoding="utf-8-sig") as f:
+        assert "is our niche company ?" not in next(csv.reader(f))
+    with open(rerun_dir / "all_leads.csv", encoding="utf-8-sig") as f:
+        assert next(csv.reader(f)).count("is our niche company ?") == 1

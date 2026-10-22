@@ -3,6 +3,7 @@
 import typer
 
 from contractor_scraper.cli.commands import (
+    christmas_sunbiz_command,
     classify_christmas_lights_command,
     enrich_pest_control_command,
     execute_engine_cli,
@@ -283,6 +284,33 @@ def classify_christmas_lights(
         concurrency=concurrency,
         resume=resume,
         timeout=timeout,
+    )
+
+
+
+@app.command(
+    name="christmas-sunbiz",
+    help="Find verified Christmas / holiday lighting installers from Sunbiz filings (resumable).",
+)
+def christmas_sunbiz_cli(
+    output: str | None = typer.Option(None, "--output", "-o", help="Leads CSV path."),
+    year: list[int] | None = typer.Option(None, "--year", "-y", help="Sunbiz year(s) to scan (repeatable)."),  # noqa: B008
+    download: bool = typer.Option(False, "--download", help="Fetch missing Sunbiz files from the portal."),
+    scope: str = typer.Option("focused", "--scope", help="holiday | focused | broad"),
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Max registrations researched this run."),
+    max_leads: int | None = typer.Option(None, "--max-leads", help="Stop after N new qualified leads."),
+    concurrency: int = typer.Option(6, "--concurrency", "-c", help="Registrations researched in parallel."),
+    resume: bool = typer.Option(True, "--resume/--no-resume", help="Skip registrations already researched."),
+) -> None:
+    christmas_sunbiz_command(
+        output=output,
+        years=year or None,
+        download=download,
+        scope=scope,
+        limit=limit,
+        max_leads=max_leads,
+        concurrency=concurrency,
+        resume=resume,
     )
 
 
