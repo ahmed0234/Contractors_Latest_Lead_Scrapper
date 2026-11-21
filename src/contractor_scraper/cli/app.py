@@ -4,6 +4,7 @@ import typer
 
 from contractor_scraper.cli.commands import (
     christmas_sunbiz_command,
+    classify_auto_repair_command,
     classify_christmas_lights_command,
     enrich_pest_control_command,
     execute_engine_cli,
@@ -286,6 +287,41 @@ def classify_christmas_lights(
         timeout=timeout,
     )
 
+
+
+@app.command(
+    name="classify-auto-repair",
+    help="Classify auto repair leads (Yes/No: provides vehicle repair services) from company websites.",
+)
+def classify_auto_repair(
+    input_file: str = typer.Option(
+        "AutoRepair/input/Auto Repair Companies with Websites.csv",
+        "--input",
+        "-i",
+        help="Path to input CSV containing auto repair candidates.",
+    ),
+    output_dir: str | None = typer.Option(
+        None,
+        "--output",
+        "--output-dir",
+        "-o",
+        help="Directory for output CSV files (default: <auto repair folder>/output/<input file name>).",
+    ),
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Maximum records to process (for testing or sampling)."),
+    concurrency: int = typer.Option(8, "--concurrency", "-c", help="Maximum websites crawled concurrently."),
+    resume: bool = typer.Option(True, "--resume/--no-resume", help="Resume from the checkpoint if it exists."),
+    timeout: float = typer.Option(
+        20.0, "--timeout", help="Per-request read timeout in seconds (connect and whole-site budgets scale from it)."
+    ),
+) -> None:
+    classify_auto_repair_command(
+        input_path=input_file,
+        output_dir=output_dir,
+        limit=limit,
+        concurrency=concurrency,
+        resume=resume,
+        timeout=timeout,
+    )
 
 
 @app.command(

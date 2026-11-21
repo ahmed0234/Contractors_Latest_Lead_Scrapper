@@ -2,6 +2,7 @@
 
 import asyncio
 import email.utils
+import functools
 import hashlib
 import html as html_lib
 import json
@@ -227,28 +228,80 @@ def _term_regex(terms: tuple[str, ...]) -> re.Pattern[str]:
     return re.compile(r"(?<![a-z])(?:" + "|".join(re.escape(t) for t in terms) + ")", re.IGNORECASE)
 
 
-_HOLIDAY_LINK_RE = _term_regex(HOLIDAY_LINK_TERMS)
-_LIGHTING_LINK_RE = _term_regex(LIGHTING_LINK_TERMS)
-_SERVICE_LINK_RE = _term_regex(SERVICE_LINK_TERMS)
-_INFO_LINK_RE = _term_regex(INFO_LINK_TERMS)
 _HOLIDAY_TEXT_RE = re.compile(
     r"\b(christmas|xmas|holiday\s+light|holiday\s+lighting|holiday\s+decor|trimlight|gemstone\s+lights|jellyfish\s+lighting|permanent\s+(?:holiday|christmas|roofline|led|outdoor|exterior)?\s*light)",
     re.IGNORECASE,
 )
 
 
-def score_link(url_path: str, anchor: str = "") -> int:
-    """Score an internal link by how likely it is to reveal holiday / decorative lighting services."""
-    combined = f"{url_path} {anchor}".lower()
-    if _HOLIDAY_LINK_RE.search(combined):
-        return 100
-    if _LIGHTING_LINK_RE.search(combined):
-        return 60
-    if _SERVICE_LINK_RE.search(combined):
-        return 40
-    if _INFO_LINK_RE.search(combined):
-        return 20
-    return 0
+@dataclass(frozen=True)
+class LinkProfile:
+    """Niche vocabulary that steers which internal pages a crawl discovers, probes, and prioritizes.
+
+    Links score 100 / 60 / 40 / 20 for primary / secondary / service / info terms (matched at word
+    starts against URL path + anchor text). Probe paths are tried when no page matches
+    `signal_pattern`; fallback paths pad the priority list when navigation exposes too few links.
+    """
+
+    name: str
+    primary_terms: tuple[str, ...]
+    secondary_terms: tuple[str, ...]
+    service_terms: tuple[str, ...]
+    info_terms: tuple[str, ...]
+    probe_paths: tuple[str, ...]
+    fallback_paths: tuple[str, ...]
+    signal_pattern: str
+    # Title/description words that make a bot-challenged homepage's metadata worth keeping
+    challenge_meta_terms: tuple[str, ...]
+    # Short-circuit KNOWN_NON_CONTRACTOR_DOMAINS (national retailers) without crawling
+    fast_path_exclusions: bool = True
+
+    @functools.cached_property
+    def _tiers(self) -> tuple[tuple[re.Pattern[str], int], ...]:
+        tiers = (
+            (self.primary_terms, 100),
+            (self.secondary_terms, 60),
+            (self.service_terms, 40),
+            (self.info_terms, 20),
+        )
+        return tuple((_term_regex(terms), score) for terms, score in tiers if terms)
+
+    @functools.cached_property
+    def signal_regex(self) -> re.Pattern[str]:
+        return re.compile(self.signal_pattern, re.IGNORECASE)
+
+    def score(self, url_path: str, anchor: str = "") -> int:
+        combined = f"{url_path} {anchor}".lower()
+        for regex, score in self._tiers:
+            if regex.search(combined):
+                return score
+        return 0
+
+
+HOLIDAY_LINK_PROFILE = LinkProfile(
+    name="holiday",
+    primary_terms=HOLIDAY_LINK_TERMS,
+    secondary_terms=LIGHTING_LINK_TERMS,
+    service_terms=SERVICE_LINK_TERMS,
+    info_terms=INFO_LINK_TERMS,
+    probe_paths=HOLIDAY_PROBE_PATHS,
+    fallback_paths=(
+        "/christmas-light-installation",
+        "/holiday-lighting",
+        "/christmas-lights",
+        "/services/holiday-lighting",
+        "/services",
+        "/about",
+        "/contact",
+    ),
+    signal_pattern=_HOLIDAY_TEXT_RE.pattern,
+    challenge_meta_terms=("christmas", "holiday", "lighting", "light", "contractor", "services"),
+)
+
+
+def score_link(url_path: str, anchor: str = "", profile: LinkProfile = HOLIDAY_LINK_PROFILE) -> int:
+    """Score an internal link by how likely it is to reveal the profile's target services."""
+    return profile.score(url_path, anchor)
 
 
 class ArchiveThrottle:
@@ -321,6 +374,7 @@ class CrawlerConfig:
     block_separators: bool = False
     max_page_bytes: int = 2_097_152
     cache_namespace: str = "crawler"
+    link_profile: LinkProfile = HOLIDAY_LINK_PROFILE
 
 
 @dataclass
@@ -893,7 +947,7 @@ class WebsiteCrawler:
             norm = _normalize_page_url(clean_url)
             if not clean_url or norm in seen:
                 continue
-            score = score_link(target.path.lower(), (anchor or "").lower())
+            score = self.config.link_profile.score(target.path.lower(), (anchor or "").lower())
             if score <= 0:
                 continue
             seen.add(norm)
@@ -918,16 +972,7 @@ class WebsiteCrawler:
 
         # Fallback well-known paths if fewer found
         if include_fallbacks and len(selected) < max_count:
-            common_fallbacks = [
-                "/christmas-light-installation",
-                "/holiday-lighting",
-                "/christmas-lights",
-                "/services/holiday-lighting",
-                "/services",
-                "/about",
-                "/contact",
-            ]
-            for fb in common_fallbacks:
+            for fb in self.config.link_profile.fallback_paths:
                 fb_url = urljoin(root_url, fb).rstrip("/")
                 if _normalize_page_url(fb_url) not in seen and len(selected) < max_count:
                     selected.append(fb_url)
@@ -1224,8 +1269,10 @@ class WebsiteCrawler:
         return accepted
 
     def _has_holiday_signal(self, state: _CrawlState) -> bool:
+        """True when a fetched page already shows the link profile's target signal (probing is skipped)."""
+        signal = self.config.link_profile.signal_regex
         pages = ([state.homepage] if state.homepage else []) + state.subpages
-        return any(_HOLIDAY_TEXT_RE.search(f"{p.title} {p.meta_description} {p.text_content}") for p in pages)
+        return any(signal.search(f"{p.title} {p.meta_description} {p.text_content}") for p in pages)
 
     @staticmethod
     def _summarize_failures(outcomes: list[FetchOutcome]) -> tuple[str, str, int | None]:
@@ -1256,7 +1303,8 @@ class WebsiteCrawler:
         root_url = f"{parsed.scheme or 'https'}://{parsed.netloc}"
 
         # Fast path: immediately identify major national retail chains and public venues
-        for ncd in KNOWN_NON_CONTRACTOR_DOMAINS:
+        fast_path = KNOWN_NON_CONTRACTOR_DOMAINS if self.config.link_profile.fast_path_exclusions else ()
+        for ncd in fast_path:
             if ncd in domain or domain.endswith(ncd):
                 return CrawlResult(
                     domain=domain,
@@ -1463,7 +1511,7 @@ class WebsiteCrawler:
                 # If meta tags contain genuine contractor keywords, capture them
                 has_substantive_meta = any(
                     k in f"{homepage.title} {homepage.meta_description}".lower()
-                    for k in ["christmas", "holiday", "lighting", "light", "contractor", "services"]
+                    for k in cfg.link_profile.challenge_meta_terms
                 )
                 if not has_substantive_meta:
                     result = CrawlResult(
@@ -1573,7 +1621,7 @@ class WebsiteCrawler:
 
             # Proactive probing: if no explicit holiday signal has been found yet, check common holiday service paths
             if not self._has_holiday_signal(state):
-                probe_urls = [urljoin(successful_root, p).rstrip("/") for p in HOLIDAY_PROBE_PATHS]
+                probe_urls = [urljoin(successful_root, p).rstrip("/") for p in cfg.link_profile.probe_paths]
                 await self._fetch_batch(
                     client, probe_urls[: max(cfg.max_probe_pages, 1)], gate, state, robots, user_agent
                 )
