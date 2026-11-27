@@ -1,0 +1,38 @@
+{
+  "domain": "mtnaples.com",
+  "base_url": "http://mtnaples.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "admin@mtnaples.com"
+  ],
+  "all_phones": [
+    "(239) 431-5750",
+    "239-4315750"
+  ],
+  "combined_text": "MOTOR TECH AUTO REPAIR  MOTOR TECH AUTO REPAIR | Search this site | Embedded Files | Skip to main content | Skip to navigation | MOTOR TECH AUTO REPAIR | Home | Privacy policy | Terms and Conditions | MOTOR TECH AUTO REPAIR | \ud83d\udd27 Who We Are | We are an automotive repair shop in Naples, Florida, committed to quality, honesty, and outstanding service . We have earned our customers\u2019 trust through efficient work, accurate diagnostics, and repairs done right the first time. Every vehicle that comes into our shop is treated with care, responsibility, and attention to detail\u2014just as if it were our own. | Our team is made up of experienced and skilled technicians capable of handling both minor and major repairs. Our reputation is built on strong customer reviews and satisfied clients who continue to recommend us . | \ud83c\udfaf Our Mission | To provide reliable, high-quality, and timely automotive repair services , offering clear and honest solutions for every customer\u2019s needs. | Our mission is to ensure that every customer leaves feeling confident, satisfied, and at peace knowing their vehicle was serviced with integrity and professionalism. | \ud83d\ude80 Our Vision | To become a trusted and leading automotive repair shop in our community , recognized for excellence, transparency, and customer trust. | We aim to continue growing, improving, and maintaining the high standards that have earned us our customers\u2019 loyalty and positive reviews. | \u2b50 Trusted by Our 5-Star Google Reviews | Our 5-star Google reviews speak for themselves . They reflect our commitment to honest diagnostics, fair pricing, and high-quality workmanship. We take pride in doing the job right the first time, communicating clearly with our customers, and never recommending unnecessary repairs. | Every review represents a customer who trusted us with their vehicle and drove away satisfied, confident, and safe. That trust is something we work hard to earn every single day. | Address | : 2425 J and C Blvd, Naples, FL 34109 | Phone: | (239) 431-5750 | Hours | : Monday to Friday 8:30 AM to 5 PM | Email | : | admin@mtnaples.com | see us in Google | admin@mtnaples.com | 2425 J and C Blvd, Naples, FL 34109 | 239-4315750 | Report abuse | Page details | Page updated | Report abuse | admin@mtnaples.com | 2425 J and C Blvd, Naples, FL 34109 | 239-4315750",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "http://mtnaples.com/",
+    "status_code": 200,
+    "title": "MOTOR TECH AUTO REPAIR",
+    "meta_description": "",
+    "text_content": "MOTOR TECH AUTO REPAIR | Search this site | Embedded Files | Skip to main content | Skip to navigation | MOTOR TECH AUTO REPAIR | Home | Privacy policy | Terms and Conditions | MOTOR TECH AUTO REPAIR | \ud83d\udd27 Who We Are | We are an automotive repair shop in Naples, Florida, committed to quality, honesty, and outstanding service . We have earned our customers\u2019 trust through efficient work, accurate diagnostics, and repairs done right the first time. Every vehicle that comes into our shop is treated with care, responsibility, and attention to detail\u2014just as if it were our own. | Our team is made up of experienced and skilled technicians capable of handling both minor and major repairs. Our reputation is built on strong customer reviews and satisfied clients who continue to recommend us . | \ud83c\udfaf Our Mission | To provide reliable, high-quality, and timely automotive repair services , offering clear and honest solutions for every customer\u2019s needs. | Our mission is to ensure that every customer leaves feeling confident, satisfied, and at peace knowing their vehicle was serviced with integrity and professionalism. | \ud83d\ude80 Our Vision | To become a trusted and leading automotive repair shop in our community , recognized for excellence, transparency, and customer trust. | We aim to continue growing, improving, and maintaining the high standards that have earned us our customers\u2019 loyalty and positive reviews. | \u2b50 Trusted by Our 5-Star Google Reviews | Our 5-star Google reviews speak for themselves . They reflect our commitment to honest diagnostics, fair pricing, and high-quality workmanship. We take pride in doing the job right the first time, communicating clearly with our customers, and never recommending unnecessary repairs. | Every review represents a customer who trusted us with their vehicle and drove away satisfied, confident, and safe. That trust is something we work hard to earn every single day. | Address | : 2425 J and C Blvd, Naples, FL 34109 | Phone: | (239) 431-5750 | Hours | : Monday to Friday 8:30 AM to 5 PM | Email | : | admin@mtnaples.com | see us in Google | admin@mtnaples.com | 2425 J and C Blvd, Naples, FL 34109 | 239-4315750 | Report abuse | Page details | Page updated | Report abuse | admin@mtnaples.com | 2425 J and C Blvd, Naples, FL 34109 | 239-4315750",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 8,
+  "pages_fetched": 1,
+  "total_attempts": 12,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "http://mtnaples.com/mtnaples.com/motor-tech-auto-repair/home"
+  ],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344637.0506992
+}

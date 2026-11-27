@@ -1,0 +1,43 @@
+{
+  "domain": "roadwaytire.com",
+  "base_url": "https://roadwaytire.com/",
+  "is_accessible": true,
+  "all_emails": [],
+  "all_phones": [
+    "954-942-8122",
+    "800-464-9585"
+  ],
+  "combined_text": "- Login  - Login | ' from the closing div tag on the next line so there is no whitespace added to ruin the 50% width of the 'half' class --> | CONTACT: 954-942-8122 | TOLL FREE: 800-464-9585 | MONDAY-FRIDAY: 7AM-5PM | SATURDAY: 8AM-12PM | SUNDAY: CLOSED | Login | About | ENTER | OUR STORY | Roadway Tire Wholesale was founded in 1989 in the South Florida Market to provide our client\u2019s exceptional service, competitive pricing and continued customer support. Our founders who started Roadway Tire Wholesale have 50 plus years in the Tire Industry and are committed to Excellence in our Industry. At Roadway Tire Wholesale, we pride ourselves as a Family-Owned business for more than 35 plus years. We give Personal Service and treat everyone like they are part of the family. | OUR MISSION | At Roadway Tire Wholesale, our mission is to drive excellence on and off the road. We believe that a well-maintained vehicle contributes to a safer and more enjoyable driving experience. Whether you are a daily commuter, an off-road enthusiast or a performance-driven driver, we have the right tires to meet your unique needs. | Roadway Tire & Parts \u00a9 2026 | Powered by | Login - Logout  - Logout | You have been logged out due to inactivity.",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://roadwaytire.com/",
+    "status_code": 200,
+    "title": "- Login",
+    "meta_description": "",
+    "text_content": "- Login | ' from the closing div tag on the next line so there is no whitespace added to ruin the 50% width of the 'half' class --> | CONTACT: 954-942-8122 | TOLL FREE: 800-464-9585 | MONDAY-FRIDAY: 7AM-5PM | SATURDAY: 8AM-12PM | SUNDAY: CLOSED | Login | About | ENTER | OUR STORY | Roadway Tire Wholesale was founded in 1989 in the South Florida Market to provide our client\u2019s exceptional service, competitive pricing and continued customer support. Our founders who started Roadway Tire Wholesale have 50 plus years in the Tire Industry and are committed to Excellence in our Industry. At Roadway Tire Wholesale, we pride ourselves as a Family-Owned business for more than 35 plus years. We give Personal Service and treat everyone like they are part of the family. | OUR MISSION | At Roadway Tire Wholesale, our mission is to drive excellence on and off the road. We believe that a well-maintained vehicle contributes to a safer and more enjoyable driving experience. Whether you are a daily commuter, an off-road enthusiast or a performance-driven driver, we have the right tires to meet your unique needs. | Roadway Tire & Parts \u00a9 2026 | Powered by | Login",
+    "is_js_shell": false
+  },
+  "subpages": [
+    {
+      "url": "https://roadwaytire.com/services",
+      "status_code": 200,
+      "title": "- Logout",
+      "meta_description": "",
+      "text_content": "- Logout | You have been logged out due to inactivity.",
+      "is_js_shell": true
+    }
+  ],
+  "pages_attempted": 11,
+  "pages_fetched": 2,
+  "total_attempts": 11,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": true,
+  "cached_at": 1795344797.2155943
+}

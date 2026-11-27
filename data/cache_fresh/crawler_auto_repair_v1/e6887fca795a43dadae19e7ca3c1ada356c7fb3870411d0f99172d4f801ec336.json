@@ -1,0 +1,55 @@
+{
+  "domain": "johnnyautoboat.com",
+  "base_url": "https://johnnyautoboat.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "johnny@johnnyautoboat.com"
+  ],
+  "all_phones": [
+    "561 444-3288",
+    "561 855-6349"
+  ],
+  "combined_text": "Johnny Auto & Boat Repair - Home Johnny Auto & Boat Repair, Inc. Johnny Auto & Boat Repair - Home [if IE] [endif] | --> | --> Johnny | Auto Boat Repair | --> | AUTO & BOAT REPAIR | Home | Services | Contact | Welcome! | Thank you for visiting. | At Johnny Auto & Boat Repair we understand the importance of your car, truck or boat and we are dedicated to providing top quality service in a timely manner, affordably! | Johnny, himself, is an ASE Certified Master Auto Technician, the most recognized and respected technical certification in the business. | Bring your vehicle to us confident in our unmatched level of service, backed by sixteen years of experience in the industry. | Full diagnostic assessments using the latest technology are our specialty and all the services we offer are designed and dedicated to maintain and repair your car, truck or boat to the highest standards by careful diagnosis and skilled technical practices. | Read More | We are conveniently located for West Palm Beach and Lake Worth just north of the intersection of Georgia Avenue and Bunker Road, on the east side. | \u00a9 2013 Johnny Auto & Boat Repair, Inc. All rights reserved. | Home | Services | Contact | &copy; 2013 Johnny Auto &amp; Boat Repair, Inc. All rights reserved. | Home | Services | Contact Johnny Auto & Boat Repair - Services Johnny Auto & Boat Repair, Inc. Johnny Auto & Boat Repair - Services [if IE] [endif] | --> --> | --> | --> Johnny | Auto Boat Repair | --> | AUTO & BOAT REPAIR | Home | Services | Contact | Our services include... | Computer Diagnostics | Using the latest technology, our equipment hooks up to the electronic systems in your engine and \"talks\" to the control modules, resulting in precise, accurate diagnosis of problems, without the guess-work or trial-and-error which can end up in wasted time and bigger bills. | Electrical Repairs | Keep your vehicle electrics in good condition to enhance reliability and optimize performance. | Oil Change & Fluids Maintenance | Oil, fuel, brake-fluid and coolant are the life-blood of your engine. Maintaining levels and changing at regular service intervals, together with replacing filters in a timely manner, will keep your engine in great shape for longer. | Where are we located? | Tune-ups | Your engine will run better, be more reliable and use less fuel with a regular performance tune-up. | Brakes & Rotors | A well maintained braking system will help to keep you and your passengers safe. | A/C Service & Repair | Cold air on a hot day | --- there's nothing like it! | Tires | Together with your brakes, good tires at the correct pressure will help to give you maximum control of your vehicle and keep fuel consumption as low as possible. We supply and fit a comprehensive range of top quality tires at the best prices around. Check us out! | Visit our facility or call us now for a competitive quotation. | \u00a9 2013 Johnny Auto & Boat Repair, Inc. All rights reserved. | Home | Services | Contact | &copy; 2013 Johnny Auto &amp; Boat Repair, Inc. All rights reserved. | Home | Services | Contact Johnny Auto & Boat Repair - Contact Johnny Auto & Boat Repair, Inc. Johnny Auto & Boat Repair - Contact [if IE] [endif] | your image here | --> | AUTO & BOAT REPAIR | Home | Services | Contact | Contact | Johnny Leon, Owner. | 5414 Georgia Avenue, West Palm Beach, FL 33405 | Call: 561 444-3288 | Fax: 561 855-6349 | ...or email us: johnny [at] johnnyautoboat [dot] com | \u00a9 2013 Johnny Auto & Boat Repair, Inc. All rights reserved. | Home | Services | Contact | &copy; 2013 Johnny Auto &amp; Boat Repair, Inc. All rights reserved. | Home | Services | Contact",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://johnnyautoboat.com/",
+    "status_code": 200,
+    "title": "Johnny Auto & Boat Repair - Home",
+    "meta_description": "Johnny Auto & Boat Repair, Inc.",
+    "text_content": "Johnny Auto & Boat Repair - Home [if IE] [endif] | --> | --> Johnny | Auto Boat Repair | --> | AUTO & BOAT REPAIR | Home | Services | Contact | Welcome! | Thank you for visiting. | At Johnny Auto & Boat Repair we understand the importance of your car, truck or boat and we are dedicated to providing top quality service in a timely manner, affordably! | Johnny, himself, is an ASE Certified Master Auto Technician, the most recognized and respected technical certification in the business. | Bring your vehicle to us confident in our unmatched level of service, backed by sixteen years of experience in the industry. | Full diagnostic assessments using the latest technology are our specialty and all the services we offer are designed and dedicated to maintain and repair your car, truck or boat to the highest standards by careful diagnosis and skilled technical practices. | Read More | We are conveniently located for West Palm Beach and Lake Worth just north of the intersection of Georgia Avenue and Bunker Road, on the east side. | \u00a9 2013 Johnny Auto & Boat Repair, Inc. All rights reserved. | Home | Services | Contact | &copy; 2013 Johnny Auto &amp; Boat Repair, Inc. All rights reserved. | Home | Services | Contact",
+    "is_js_shell": false
+  },
+  "subpages": [
+    {
+      "url": "https://johnnyautoboat.com/services.html",
+      "status_code": 200,
+      "title": "Johnny Auto & Boat Repair - Services",
+      "meta_description": "Johnny Auto & Boat Repair, Inc.",
+      "text_content": "Johnny Auto & Boat Repair - Services [if IE] [endif] | --> --> | --> | --> Johnny | Auto Boat Repair | --> | AUTO & BOAT REPAIR | Home | Services | Contact | Our services include... | Computer Diagnostics | Using the latest technology, our equipment hooks up to the electronic systems in your engine and \"talks\" to the control modules, resulting in precise, accurate diagnosis of problems, without the guess-work or trial-and-error which can end up in wasted time and bigger bills. | Electrical Repairs | Keep your vehicle electrics in good condition to enhance reliability and optimize performance. | Oil Change & Fluids Maintenance | Oil, fuel, brake-fluid and coolant are the life-blood of your engine. Maintaining levels and changing at regular service intervals, together with replacing filters in a timely manner, will keep your engine in great shape for longer. | Where are we located? | Tune-ups | Your engine will run better, be more reliable and use less fuel with a regular performance tune-up. | Brakes & Rotors | A well maintained braking system will help to keep you and your passengers safe. | A/C Service & Repair | Cold air on a hot day | --- there's nothing like it! | Tires | Together with your brakes, good tires at the correct pressure will help to give you maximum control of your vehicle and keep fuel consumption as low as possible. We supply and fit a comprehensive range of top quality tires at the best prices around. Check us out! | Visit our facility or call us now for a competitive quotation. | \u00a9 2013 Johnny Auto & Boat Repair, Inc. All rights reserved. | Home | Services | Contact | &copy; 2013 Johnny Auto &amp; Boat Repair, Inc. All rights reserved. | Home | Services | Contact",
+      "is_js_shell": false
+    },
+    {
+      "url": "https://johnnyautoboat.com/contact.html",
+      "status_code": 200,
+      "title": "Johnny Auto & Boat Repair - Contact",
+      "meta_description": "Johnny Auto & Boat Repair, Inc.",
+      "text_content": "Johnny Auto & Boat Repair - Contact [if IE] [endif] | your image here | --> | AUTO & BOAT REPAIR | Home | Services | Contact | Contact | Johnny Leon, Owner. | 5414 Georgia Avenue, West Palm Beach, FL 33405 | Call: 561 444-3288 | Fax: 561 855-6349 | ...or email us: johnny [at] johnnyautoboat [dot] com | \u00a9 2013 Johnny Auto & Boat Repair, Inc. All rights reserved. | Home | Services | Contact | &copy; 2013 Johnny Auto &amp; Boat Repair, Inc. All rights reserved. | Home | Services | Contact",
+      "is_js_shell": false
+    }
+  ],
+  "pages_attempted": 9,
+  "pages_fetched": 3,
+  "total_attempts": 9,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "https://johnnyautoboat.com/services.html"
+  ],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344418.3923643
+}

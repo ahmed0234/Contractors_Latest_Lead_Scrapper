@@ -1,0 +1,45 @@
+{
+  "domain": "miamilube.com",
+  "base_url": "https://miamilube.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "xe.iaso@techaro.lol"
+  ],
+  "all_phones": [
+    "786 487 8709",
+    "(786) 487 8709"
+  ],
+  "combined_text": "Making sure you're not a bot!  Making sure you're not a bot! | Making sure you're not a bot! | Loading... | Anubis could not load its JavaScript. The server may be overloaded. Please reload the page to try again. | This is a measure against bots and malicious requests similar to a CAPTCHA. However, instead of having to do work yourself, your browser is given a calculation task that it has to solve to ensure that it is a valid client. This concept is called | Proof of Work | . The task is calculated in a few seconds and you are granted access to the website. Thank you for your understanding and patience. | Please note that Anubis requires the use of modern JavaScript features that plugins like JShelter will disable. Please disable JShelter or other such plugins for this domain. | Protected by | Anubis | From | Techaro | . Made with \u2764\ufe0f in \ud83c\udde8\ud83c\udde6. | Mascot design by | CELPHASE | . | This website is running Anubis version v1.28.2 . | Protected by | Anubis | From | Techaro | . Made with \u2764\ufe0f in \ud83c\udde8\ud83c\udde6. | Mascot design by | CELPHASE | . | This website is running Anubis version v1.28.2 . Contact Us | Miami Lube Services  Contact Us | Miami Lube Services | 786 487 8709 | Welcome | Contact Us | Select Page | Contact Us | 6645 NW 77 AVE | MIAMI, FLORIDA 33166 | Open Mon \u2013 Fri : 8am \u2013 5pm | \ue090 | (786) 487 8709 | Get Directions | Send a Message | Name | Email Address | Phone Number | Service required | Service required | Car wash | Tyre change | Engine repair | Paint | Message | 1 + 6 = | Submit | Pricing & Plans | Sen us a message! | Plans & Services | Book Appointment | Call us for appointment. | Book Now | Contact Us | \ue090 | Call us | (786) 487 8709 | Message Us | \u00a9 MIAMI LUBE SERVICES 2020 | ,Made with SCMediaGroup.net | \u00a9 MIAMI LUBE SERVICES 2020 | ,Made with SCMediaGroup.net",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://miamilube.com/",
+    "status_code": 200,
+    "title": "Making sure you're not a bot!",
+    "meta_description": "",
+    "text_content": "Making sure you're not a bot! | Making sure you're not a bot! | Loading... | Anubis could not load its JavaScript. The server may be overloaded. Please reload the page to try again. | This is a measure against bots and malicious requests similar to a CAPTCHA. However, instead of having to do work yourself, your browser is given a calculation task that it has to solve to ensure that it is a valid client. This concept is called | Proof of Work | . The task is calculated in a few seconds and you are granted access to the website. Thank you for your understanding and patience. | Please note that Anubis requires the use of modern JavaScript features that plugins like JShelter will disable. Please disable JShelter or other such plugins for this domain. | Protected by | Anubis | From | Techaro | . Made with \u2764\ufe0f in \ud83c\udde8\ud83c\udde6. | Mascot design by | CELPHASE | . | This website is running Anubis version v1.28.2 . | Protected by | Anubis | From | Techaro | . Made with \u2764\ufe0f in \ud83c\udde8\ud83c\udde6. | Mascot design by | CELPHASE | . | This website is running Anubis version v1.28.2 .",
+    "is_js_shell": false
+  },
+  "subpages": [
+    {
+      "url": "https://miamilube.com/index.php/contact-us",
+      "status_code": 200,
+      "title": "Contact Us | Miami Lube Services",
+      "meta_description": "",
+      "text_content": "Contact Us | Miami Lube Services | 786 487 8709 | Welcome | Contact Us | Select Page | Contact Us | 6645 NW 77 AVE | MIAMI, FLORIDA 33166 | Open Mon \u2013 Fri : 8am \u2013 5pm | \ue090 | (786) 487 8709 | Get Directions | Send a Message | Name | Email Address | Phone Number | Service required | Service required | Car wash | Tyre change | Engine repair | Paint | Message | 1 + 6 = | Submit | Pricing & Plans | Sen us a message! | Plans & Services | Book Appointment | Call us for appointment. | Book Now | Contact Us | \ue090 | Call us | (786) 487 8709 | Message Us | \u00a9 MIAMI LUBE SERVICES 2020 | ,Made with SCMediaGroup.net | \u00a9 MIAMI LUBE SERVICES 2020 | ,Made with SCMediaGroup.net",
+      "is_js_shell": false
+    }
+  ],
+  "pages_attempted": 12,
+  "pages_fetched": 2,
+  "total_attempts": 15,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": true,
+  "cached_at": 1795344606.2169352
+}

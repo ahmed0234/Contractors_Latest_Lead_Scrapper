@@ -1,0 +1,54 @@
+{
+  "domain": "mintechnaples.com",
+  "base_url": "https://mintechnaples.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "matt@mintechnaples.com"
+  ],
+  "all_phones": [
+    "239-431-7088"
+  ],
+  "combined_text": "MinTech - Home  MinTech - Home | MIN TECH | YOUR MINI COOPER SPECIALISTS | We are ASE certified and MINI factory trained technicians, | exclusively serving all of your MINI's needs from general maintenance, | extensive MINI performance modifications and everything in between. | MIN TECH provides MINI owners local South West Florida | access to a MINI exclusive automotive service | repair facility you can depend on. | CALL US | 239-431-7088 | EMAIL US | matt@mintechnaples.com | MIN TECH Stocking a Full Line of | MINI Cooper Replacement Parts and | MINI Cooper Accessories for Sale | Please do not confuse MinTech Naples Automotive Service \"Your MINI cooper mechanic in Naples Florida\" with MiniTech, Mini Tec, Mini Cooper Tech, mini tech or mintec. | --> | $is_admin_panel | Home | Services | Testimonial | Contact MinTech - Services  MinTech - Services | MIN TECH's MO JO Motor Joy | MAINTENANCE | ALL PRODUCTS SOLD; BRAKES, WIPERS, FILTERS, FLUIDS... MEET OR EXCEED MINI FACTORY STANDARDS. | MINTECH PERFORMS AND RECOMMENDS SHORTENED OIL CHANGE ITERVALS FOR R56 TURBO MODELS. | CLICK HERE FOR THIS MONTH'S SPECIALS! [PDF] | --> | REPAIR | MINTECH USES ONLY OEM QUALITY OR SUPERIOR REPLACEMENT PARTS FOR YOUR MINI COOPER | MINTECH GUARANTEES SERVICE WORK FOR ONE YEAR OR 12,000 MILES, WHICHEVER COMES FIRST (SOME EXCEPTIONS APPLY) | DIAGNOSIS | IN HOUSE FACTORY LEVEL DIAGNOSTIC EQUIPMENT, DATA ANALYSED BY MINI FACTORY TRAINED STAFF. | MINTECH TECHNICIANS ARE ALSO ASE CERTIFIED. | PERFORMANCE MODIFICATION | PERFORMANCE MINI MODIFICATIONS; MINI TO MAXI AND EVERYTHING IN BETWEEN | MODIFY IT - MAKE YOUR MINI MOVE AND GROOVE! | --> | $is_admin_panel | Home | Services | Testimonial | Contact MinTech - Contact  MinTech - Contact | EMAIL: | matt@mintechnaples.com | TELEPHONE: | 239-431-7088 | ADDRESS: | 5567 TAYLOR RD #1 | NAPLES, FL 34109-1897 | See on Google Maps | CONTACT FORM: | Your Name | Phone Number | Email Address | Comments / Request | --> | $is_admin_panel | Home | Services | Testimonial | Contact",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://mintechnaples.com/",
+    "status_code": 200,
+    "title": "MinTech - Home",
+    "meta_description": "",
+    "text_content": "MinTech - Home | MIN TECH | YOUR MINI COOPER SPECIALISTS | We are ASE certified and MINI factory trained technicians, | exclusively serving all of your MINI's needs from general maintenance, | extensive MINI performance modifications and everything in between. | MIN TECH provides MINI owners local South West Florida | access to a MINI exclusive automotive service | repair facility you can depend on. | CALL US | 239-431-7088 | EMAIL US | matt@mintechnaples.com | MIN TECH Stocking a Full Line of | MINI Cooper Replacement Parts and | MINI Cooper Accessories for Sale | Please do not confuse MinTech Naples Automotive Service \"Your MINI cooper mechanic in Naples Florida\" with MiniTech, Mini Tec, Mini Cooper Tech, mini tech or mintec. | --> | $is_admin_panel | Home | Services | Testimonial | Contact",
+    "is_js_shell": false
+  },
+  "subpages": [
+    {
+      "url": "https://mintechnaples.com/index-1.php",
+      "status_code": 200,
+      "title": "MinTech - Services",
+      "meta_description": "",
+      "text_content": "MinTech - Services | MIN TECH's MO JO Motor Joy | MAINTENANCE | ALL PRODUCTS SOLD; BRAKES, WIPERS, FILTERS, FLUIDS... MEET OR EXCEED MINI FACTORY STANDARDS. | MINTECH PERFORMS AND RECOMMENDS SHORTENED OIL CHANGE ITERVALS FOR R56 TURBO MODELS. | CLICK HERE FOR THIS MONTH'S SPECIALS! [PDF] | --> | REPAIR | MINTECH USES ONLY OEM QUALITY OR SUPERIOR REPLACEMENT PARTS FOR YOUR MINI COOPER | MINTECH GUARANTEES SERVICE WORK FOR ONE YEAR OR 12,000 MILES, WHICHEVER COMES FIRST (SOME EXCEPTIONS APPLY) | DIAGNOSIS | IN HOUSE FACTORY LEVEL DIAGNOSTIC EQUIPMENT, DATA ANALYSED BY MINI FACTORY TRAINED STAFF. | MINTECH TECHNICIANS ARE ALSO ASE CERTIFIED. | PERFORMANCE MODIFICATION | PERFORMANCE MINI MODIFICATIONS; MINI TO MAXI AND EVERYTHING IN BETWEEN | MODIFY IT - MAKE YOUR MINI MOVE AND GROOVE! | --> | $is_admin_panel | Home | Services | Testimonial | Contact",
+      "is_js_shell": false
+    },
+    {
+      "url": "https://mintechnaples.com/index-4.php",
+      "status_code": 200,
+      "title": "MinTech - Contact",
+      "meta_description": "",
+      "text_content": "MinTech - Contact | EMAIL: | matt@mintechnaples.com | TELEPHONE: | 239-431-7088 | ADDRESS: | 5567 TAYLOR RD #1 | NAPLES, FL 34109-1897 | See on Google Maps | CONTACT FORM: | Your Name | Phone Number | Email Address | Comments / Request | --> | $is_admin_panel | Home | Services | Testimonial | Contact",
+      "is_js_shell": false
+    }
+  ],
+  "pages_attempted": 9,
+  "pages_fetched": 3,
+  "total_attempts": 15,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "https://mintechnaples.com/index-1.php"
+  ],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344621.638037
+}

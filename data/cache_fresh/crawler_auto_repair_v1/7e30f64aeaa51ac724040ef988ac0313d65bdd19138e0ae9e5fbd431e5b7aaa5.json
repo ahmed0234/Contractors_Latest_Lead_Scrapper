@@ -1,0 +1,31 @@
+{
+  "domain": "linusautomotive.com",
+  "base_url": "https://linusautomotive.com/",
+  "is_accessible": true,
+  "all_emails": [],
+  "all_phones": [],
+  "combined_text": "Dealer Website  sgcaptcha bot challenge required Dealer Website",
+  "error_message": null,
+  "status_code": 403,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://linusautomotive.com/",
+    "status_code": 403,
+    "title": "Dealer Website",
+    "meta_description": "",
+    "text_content": "sgcaptcha bot challenge required Dealer Website",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 11,
+  "pages_fetched": 1,
+  "total_attempts": 11,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": true,
+  "cached_at": 1795343822.2947645
+}

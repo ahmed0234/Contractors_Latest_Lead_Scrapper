@@ -1,0 +1,31 @@
+{
+  "domain": "acg.aaa.com",
+  "base_url": "https://www.acg.aaa.com/",
+  "is_accessible": false,
+  "all_emails": [],
+  "all_phones": [],
+  "combined_text": "",
+  "error_message": "Website protected by web firewall / bot challenge (not bypassed)",
+  "status_code": 403,
+  "status_category": "Bot Challenge",
+  "homepage": {
+    "url": "https://www.acg.aaa.com/",
+    "status_code": 403,
+    "title": "Access Denied",
+    "meta_description": "",
+    "text_content": "Access Denied | Access Denied | You don't have permission to access \"http://www.acg.aaa.com/\" on this server. | Reference #18.d29e3617.1795343925.bb85b920 | https://errors.edgesuite.net/18.d29e3617.1795343925.bb85b920",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 0,
+  "pages_fetched": 0,
+  "total_attempts": 7,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": false,
+  "probes_checked": false,
+  "cached_at": 1795343926.3692899
+}

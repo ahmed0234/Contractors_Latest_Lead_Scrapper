@@ -1,0 +1,31 @@
+{
+  "domain": "jimsbodyshop.com",
+  "base_url": "https://jimsbodyshop.com/",
+  "is_accessible": false,
+  "all_emails": [],
+  "all_phones": [],
+  "combined_text": "",
+  "error_message": "Website protected by web firewall / bot challenge (not bypassed)",
+  "status_code": 202,
+  "status_category": "Bot Challenge",
+  "homepage": {
+    "url": "https://jimsbodyshop.com/",
+    "status_code": 202,
+    "title": "Bot Verification Required",
+    "meta_description": "",
+    "text_content": "sgcaptcha bot challenge required ",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 0,
+  "pages_fetched": 0,
+  "total_attempts": 4,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": false,
+  "probes_checked": false,
+  "cached_at": 1795345201.0701537
+}

@@ -1,0 +1,31 @@
+{
+  "domain": "eagletiremilton.com",
+  "base_url": "https://eagletiremilton.com/",
+  "is_accessible": false,
+  "all_emails": [],
+  "all_phones": [],
+  "combined_text": "",
+  "error_message": "Website protected by web firewall / bot challenge (not bypassed)",
+  "status_code": 403,
+  "status_category": "Bot Challenge",
+  "homepage": {
+    "url": "https://eagletiremilton.com/",
+    "status_code": 403,
+    "title": "Attention Required! | Cloudflare",
+    "meta_description": "",
+    "text_content": "Attention Required! | Cloudflare | Please enable cookies. | Sorry, you have been blocked | You are unable to access eagletiremilton.com | Why have I been blocked? | This website is using a security service to protect itself from online attacks. The action you just performed triggered the security solution. There are several actions that could trigger this block including submitting a certain word or phrase, a SQL command or malformed data. | What can I do to resolve this? | You can email the site owner to let them know you were blocked. Please include what you were doing when this page came up and the Cloudflare Ray ID found at the bottom of this page. | Cloudflare Ray ID: a5e754c0794bfdc4 \u2022 Your IP: | Click to reveal | 2a09:bac1:5b20:20::3c3:4c \u2022 Performance & security by | Cloudflare",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 0,
+  "pages_fetched": 0,
+  "total_attempts": 1,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": false,
+  "probes_checked": false,
+  "cached_at": 1795344184.8336833
+}

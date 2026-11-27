@@ -1,0 +1,150 @@
+{
+  "generated_at": "2026-11-22T16:02:13",
+  "classifier_version": "2026.11-auto-repair-4",
+  "input_file": "AutoRepair/input/Under.csv",
+  "output_dir": "AutoRepair/output/Under_fresh",
+  "totals": {
+    "input_rows": 528,
+    "exact_duplicate_rows_removed": 0,
+    "duplicate_groups": 28,
+    "rows_in_duplicate_groups": 66,
+    "duplicates_removed_from_qualified_sheet": 38,
+    "leads_classified": 528,
+    "qualified": 526,
+    "not_qualified": 0,
+    "uncertain": 1,
+    "unreachable": 1,
+    "qualification_rate_pct": 99.62,
+    "unique_websites": 397,
+    "websites_successfully_evaluated": 385,
+    "websites_requiring_verification": 2,
+    "websites_retried": 6,
+    "recovered_on_retry": 1,
+    "restored_from_checkpoint": 0,
+    "evaluated_via_archived_snapshot": 18
+  },
+  "output_files": {
+    "qualified_leads.csv": "AutoRepair/output/Under_fresh/qualified_leads.csv",
+    "not_qualified_leads.csv": "AutoRepair/output/Under_fresh/not_qualified_leads.csv",
+    "uncertain_leads.csv": "AutoRepair/output/Under_fresh/uncertain_leads.csv",
+    "unreachable_leads.csv": "AutoRepair/output/Under_fresh/unreachable_leads.csv",
+    "all_leads.csv": "AutoRepair/output/Under_fresh/all_leads.csv",
+    "duplicates.csv": "AutoRepair/output/Under_fresh/duplicates.csv",
+    "classification_report.csv": "AutoRepair/output/Under_fresh/classification_report.csv"
+  },
+  "validation": {
+    "passed": true,
+    "leads_expected": 490,
+    "leads_placed": 490,
+    "missing_from_outputs": [],
+    "in_multiple_outputs": [],
+    "file_row_counts": {
+      "qualified_leads.csv": 488,
+      "not_qualified_leads.csv": 0,
+      "uncertain_leads.csv": 1,
+      "unreachable_leads.csv": 1
+    },
+    "file_count_mismatches": [],
+    "qualified_without_evidence": [],
+    "decision_column_filled": true,
+    "low_confidence_for_review": 2,
+    "borderline_rows": 92,
+    "decided_from_name_only": 62,
+    "duplicates_sheet_rows": 66,
+    "duplicate_rows_share_verdict": true
+  },
+  "persistent_crawl_failures": [
+    {
+      "company": "BORNFIELD AUTOMOTIVE GROUP, LLC.",
+      "url": "https://bornfieldauto.com",
+      "status": "Empty Page",
+      "error": "Website returned almost no readable content",
+      "rows": "1"
+    },
+    {
+      "company": "CAUGHENBAUGH ENTERPRISES, INC",
+      "url": "https://glassdoctorswfl.com",
+      "status": "DNS Failure",
+      "error": "https://glassdoctorswfl.com/ -> DNS Failure (ConnectError: [Errno -5] No address associated with hostname) after 2 attempts; https://www.glassdoctorswfl.com/ -> DNS Failure (ConnectError: [Errno -2] Name or service not known) after 2 attempts",
+      "rows": "2"
+    },
+    {
+      "company": "CHARLESDALE ASSOCIATES, INC.",
+      "url": "https://aamco1.com",
+      "status": "Empty Page",
+      "error": "Website returned almost no readable content",
+      "rows": "2"
+    },
+    {
+      "company": "COLLIMOTIVE, INC",
+      "url": "https://carstarusa.com",
+      "status": "Empty Page",
+      "error": "Website returned almost no readable content",
+      "rows": "2"
+    },
+    {
+      "company": "JIMMIE'S FIRESTONE & SERVICE CENTER, INC.",
+      "url": "https://jimmiesfirestone.net",
+      "status": "DNS Failure",
+      "error": "https://jimmiesfirestone.net/ -> DNS Failure (ConnectError: [Errno -5] No address associated with hostname) after 2 attempts; https://www.jimmiesfirestone.net/ -> DNS Failure (ConnectError: [Errno -2] Name or service not known) after 2 attempts",
+      "rows": "1"
+    },
+    {
+      "company": "MAACO OF LONGWOOD LLC",
+      "url": "https://maacolongwood.com",
+      "status": "Empty Page",
+      "error": "Website returned almost no readable content",
+      "rows": "1"
+    },
+    {
+      "company": "MANGUAL ENTERPRISES TEN, LLC",
+      "url": "https://tuffygulfbreeze.com",
+      "status": "HTTP Error 404",
+      "error": "https://tuffygulfbreeze.com/ -> HTTP Error 404 (HTTP 404); http://tuffygulfbreeze.com/ -> HTTP Error 404 (HTTP 404); https://www.tuffygulfbreeze.com/ -> HTTP Error 404 (HTTP 404); http://www.tuffygulfbreeze.com/ -> HTTP Error 404 (HTTP 404)",
+      "rows": "1"
+    },
+    {
+      "company": "P5 ORLANDO LLC",
+      "url": "https://p5orlando.com",
+      "status": "Empty Page",
+      "error": "Website returned almost no readable content",
+      "rows": "2"
+    },
+    {
+      "company": "PALM GARAGE WORKS, LLC",
+      "url": "https://pgwus.com",
+      "status": "Empty Page",
+      "error": "Website returned almost no readable content",
+      "rows": "1"
+    },
+    {
+      "company": "PARC AUTO LLC",
+      "url": "https://parcautogroup.com",
+      "status": "Blocked by robots.txt",
+      "error": "https://parcautogroup.com/ -> Blocked by robots.txt (Disallowed by robots.txt); http://parcautogroup.com/ -> Blocked by robots.txt (Disallowed by robots.txt); https://www.parcautogroup.com/ -> Blocked by robots.txt (Disallowed by robots.txt); http://www.parcautogroup.com/ -> Blocked by robots.txt (D",
+      "rows": "1"
+    },
+    {
+      "company": "PEACHY PRODUCTION LLC",
+      "url": "https://maacoorlando.com",
+      "status": "Empty Page",
+      "error": "Website returned almost no readable content",
+      "rows": "1"
+    },
+    {
+      "company": "SUNSHINE LUBES LLC",
+      "url": "https://vioc.net",
+      "status": "DNS Failure",
+      "error": "https://vioc.net/ -> DNS Failure (ConnectError: [Errno -5] No address associated with hostname) after 2 attempts; https://www.vioc.net/ -> DNS Failure (ConnectError: [Errno -2] Name or service not known) after 2 attempts",
+      "rows": "1"
+    }
+  ],
+  "uncertain_cases": [
+    {
+      "company": "3 BUDDIES PAINT & BODY INC.",
+      "url": "https://ll-cc.com",
+      "reason": "Live site unavailable (Rate Limited); evaluated Wayback Machine snapshot from 2025-07-12. Website ll-cc.com has too little content to show its services (47 words). Classified from the name: dba name 'collision, paint and body' -> collision / auto body. Low confidence; review manually."
+    }
+  ],
+  "duration_seconds": 1525.8
+}

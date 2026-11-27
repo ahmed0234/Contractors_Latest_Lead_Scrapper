@@ -1,0 +1,36 @@
+{
+  "domain": "trueglass.net",
+  "base_url": "https://trueglass.net/",
+  "is_accessible": true,
+  "all_emails": [
+    "info@trueglass.net"
+  ],
+  "all_phones": [
+    "8135222263",
+    "(813) 522-2263"
+  ],
+  "combined_text": "Auto Glass Pro Booking | Scheduling, Estimates & Invoicing Software Auto Glass Pro Booking - run your auto glass shop from your phone: VIN lookup, instant estimates, work orders, invoices, scheduling and weekly profit reports. Auto Glass Pro Booking | Scheduling, Estimates & Invoicing Software | @context | https //schema.org | @type | AutoRepair | name | TrueGlass AutoGlass | image | https //trueglass.net/og-image.jpg | telephone | (813) 522-2263 | email | info@trueglass.net | address | @type | PostalAddress | streetAddress | 1504 E Dr Martin Luther King Jr Blvd | addressLocality | Tampa | addressRegion | FL | postalCode | 33610 | addressCountry | US | geo | @type | GeoCoordinates | latitude | 27.9506 | longitude | -82.4572 | url | https //trueglass.net | openingHoursSpecification | @type | OpeningHoursSpecification | dayOfWeek | Monday | Tuesday | Wednesday | Thursday | Friday | opens | 08 00 | closes | 19 00 | @type | OpeningHoursSpecification | dayOfWeek | Saturday | opens | 09 00 | closes | 17 00 | priceRange | $$ | areaServed | @type | City | name | Tampa | serviceType | Windshield Replacement | Auto Glass Repair | Chip Repair | Mobile Auto Glass Service | description | TrueGlass AutoGlass provides expert mobile auto glass repair and windshield replacement services in Tampa | FL. We come to your location for convenient same-day service. | hasOfferCatalog | @type | OfferCatalog | name | Auto Glass Services | itemListElement | @type | Offer | itemOffered | @type | Service | name | Windshield Replacement | @type | Offer | itemOffered | @type | Service | name | Windshield Chip Repair | @type | Offer | itemOffered | @type | Service | name | Mobile Auto Glass Service",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://trueglass.net/",
+    "status_code": 200,
+    "title": "Auto Glass Pro Booking | Scheduling, Estimates & Invoicing Software",
+    "meta_description": "Auto Glass Pro Booking - run your auto glass shop from your phone: VIN lookup, instant estimates, work orders, invoices, scheduling and weekly profit reports.",
+    "text_content": "Auto Glass Pro Booking | Scheduling, Estimates & Invoicing Software | @context | https //schema.org | @type | AutoRepair | name | TrueGlass AutoGlass | image | https //trueglass.net/og-image.jpg | telephone | (813) 522-2263 | email | info@trueglass.net | address | @type | PostalAddress | streetAddress | 1504 E Dr Martin Luther King Jr Blvd | addressLocality | Tampa | addressRegion | FL | postalCode | 33610 | addressCountry | US | geo | @type | GeoCoordinates | latitude | 27.9506 | longitude | -82.4572 | url | https //trueglass.net | openingHoursSpecification | @type | OpeningHoursSpecification | dayOfWeek | Monday | Tuesday | Wednesday | Thursday | Friday | opens | 08 00 | closes | 19 00 | @type | OpeningHoursSpecification | dayOfWeek | Saturday | opens | 09 00 | closes | 17 00 | priceRange | $$ | areaServed | @type | City | name | Tampa | serviceType | Windshield Replacement | Auto Glass Repair | Chip Repair | Mobile Auto Glass Service | description | TrueGlass AutoGlass provides expert mobile auto glass repair and windshield replacement services in Tampa | FL. We come to your location for convenient same-day service. | hasOfferCatalog | @type | OfferCatalog | name | Auto Glass Services | itemListElement | @type | Offer | itemOffered | @type | Service | name | Windshield Replacement | @type | Offer | itemOffered | @type | Service | name | Windshield Chip Repair | @type | Offer | itemOffered | @type | Service | name | Mobile Auto Glass Service",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 11,
+  "pages_fetched": 1,
+  "total_attempts": 11,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": true,
+  "cached_at": 1795345083.4752574
+}

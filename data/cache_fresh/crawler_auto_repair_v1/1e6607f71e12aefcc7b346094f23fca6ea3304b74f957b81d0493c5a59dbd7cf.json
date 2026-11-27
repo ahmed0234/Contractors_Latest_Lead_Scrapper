@@ -1,0 +1,47 @@
+{
+  "domain": "kingdomautoclinic.com",
+  "base_url": "https://www.kingdomautoclinic.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "shop@kingdomautoclinic.com"
+  ],
+  "all_phones": [
+    "+18503962665"
+  ],
+  "combined_text": "Kingdom Auto Clinic \u2014 Mobile Auto Repair \u00b7 Baker, FL Mobile auto repair in Baker, FL. We come to you \u2014 engine diagnostics, brakes, oil changes & more. 50-mile service radius. Book same-day. Kingdom Auto Clinic \u2014 Mobile Auto Repair \u00b7 Baker, FL | @context | https //schema.org | @type | AutoRepair | name | Kingdom Auto Clinic | description | Faith-driven mobile auto repair business serving Baker | FL and surrounding communities within a 50-mile radius. We come to your home | office | or any location. | url | https //www.kingdomautoclinic.com | telephone | +18503962665 | email | shop@kingdomautoclinic.com | address | @type | PostalAddress | streetAddress | 1789 Dads Rd | addressLocality | Baker | addressRegion | FL | postalCode | 32531 | addressCountry | US | geo | @type | GeoCoordinates | latitude | 30.8004 | longitude | -86.7407 | areaServed | @type | GeoCircle | geoMidpoint | @type | GeoCoordinates | latitude | 30.8004 | longitude | -86.7407 | geoRadius | 80000 | openingHoursSpecification | @type | OpeningHoursSpecification | dayOfWeek | Monday | Tuesday | Wednesday | Thursday | Friday | opens | 07 00 | closes | 19 00 | @type | OpeningHoursSpecification | dayOfWeek | Saturday | opens | 08 00 | closes | 17 00 | priceRange | $$ | image | https //www.kingdomautoclinic.com/opengraph.jpg | hasOfferCatalog | @type | OfferCatalog | name | Mobile Auto Repair Services | itemListElement | @type | Offer | itemOffered | @type | Service | name | Engine Diagnostics & Repair | @type | Offer | itemOffered | @type | Service | name | Brake Services | @type | Offer | itemOffered | @type | Service | name | Oil Changes | @type | Offer | itemOffered | @type | Service | name | Battery Replacement | @type | Offer | itemOffered | @type | Service | name | Starter & Alternator Repair | @type | Offer | itemOffered | @type | Service | name | A/C Service & Recharge | @type | Offer | itemOffered | @type | Service | name | Transmission Service | @type | Offer | itemOffered | @type | Service | name | Suspension & Steering | @type | Offer | itemOffered | @type | Service | name | Pre-Purchase Inspection | @type | Offer | itemOffered | @type | Service | name | Fluid Services | @type | Offer | itemOffered | @type | Service | name | Tune-Ups",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://www.kingdomautoclinic.com/",
+    "status_code": 200,
+    "title": "Kingdom Auto Clinic \u2014 Mobile Auto Repair \u00b7 Baker, FL",
+    "meta_description": "Mobile auto repair in Baker, FL. We come to you \u2014 engine diagnostics, brakes, oil changes & more. 50-mile service radius. Book same-day.",
+    "text_content": "Kingdom Auto Clinic \u2014 Mobile Auto Repair \u00b7 Baker, FL | @context | https //schema.org | @type | AutoRepair | name | Kingdom Auto Clinic | description | Faith-driven mobile auto repair business serving Baker | FL and surrounding communities within a 50-mile radius. We come to your home | office | or any location. | url | https //www.kingdomautoclinic.com | telephone | +18503962665 | email | shop@kingdomautoclinic.com | address | @type | PostalAddress | streetAddress | 1789 Dads Rd | addressLocality | Baker | addressRegion | FL | postalCode | 32531 | addressCountry | US | geo | @type | GeoCoordinates | latitude | 30.8004 | longitude | -86.7407 | areaServed | @type | GeoCircle | geoMidpoint | @type | GeoCoordinates | latitude | 30.8004 | longitude | -86.7407 | geoRadius | 80000 | openingHoursSpecification | @type | OpeningHoursSpecification | dayOfWeek | Monday | Tuesday | Wednesday | Thursday | Friday | opens | 07 00 | closes | 19 00 | @type | OpeningHoursSpecification | dayOfWeek | Saturday | opens | 08 00 | closes | 17 00 | priceRange | $$ | image | https //www.kingdomautoclinic.com/opengraph.jpg | hasOfferCatalog | @type | OfferCatalog | name | Mobile Auto Repair Services | itemListElement | @type | Offer | itemOffered | @type | Service | name | Engine Diagnostics & Repair | @type | Offer | itemOffered | @type | Service | name | Brake Services | @type | Offer | itemOffered | @type | Service | name | Oil Changes | @type | Offer | itemOffered | @type | Service | name | Battery Replacement | @type | Offer | itemOffered | @type | Service | name | Starter & Alternator Repair | @type | Offer | itemOffered | @type | Service | name | A/C Service & Recharge | @type | Offer | itemOffered | @type | Service | name | Transmission Service | @type | Offer | itemOffered | @type | Service | name | Suspension & Steering | @type | Offer | itemOffered | @type | Service | name | Pre-Purchase Inspection | @type | Offer | itemOffered | @type | Service | name | Fluid Services | @type | Offer | itemOffered | @type | Service | name | Tune-Ups",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 11,
+  "pages_fetched": 1,
+  "total_attempts": 13,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "https://www.kingdomautoclinic.com/services/engine-diagnostics",
+    "https://www.kingdomautoclinic.com/services/brake-services",
+    "https://www.kingdomautoclinic.com/services/oil-changes",
+    "https://www.kingdomautoclinic.com/services/battery-replacement",
+    "https://www.kingdomautoclinic.com/services/starter-alternator",
+    "https://www.kingdomautoclinic.com/services/ac-recharge",
+    "https://www.kingdomautoclinic.com/services/transmission-service",
+    "https://www.kingdomautoclinic.com/services/suspension-steering",
+    "https://www.kingdomautoclinic.com/services/pre-purchase-inspection",
+    "https://www.kingdomautoclinic.com/services/fluid-services",
+    "https://www.kingdomautoclinic.com/services/tune-ups"
+  ],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344442.9697042
+}

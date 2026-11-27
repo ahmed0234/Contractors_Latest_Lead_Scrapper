@@ -1,0 +1,46 @@
+{
+  "domain": "firstcoastautomotive.net",
+  "base_url": "https://firstcoastautomotive.net/",
+  "is_accessible": true,
+  "all_emails": [
+    "james@firstcoastautomotive.comcastbiz.net"
+  ],
+  "all_phones": [
+    "1-904-356-5268"
+  ],
+  "combined_text": "Home - firstcoastautomotive  Home - firstcoastautomotive | Contact Us | Close panel | Call us now ! | Send us an email | Find us on the map | FIRST COAST AUTOMOTIVE | (PAINT+BODY+COLLISION REPAIRS) | Home | Contact Us | COMPANY INFORMATION | Searching | LOCATION: 2625 PEARL STREET NORTH | JACKSONVILLE, FLORIDA 32206 | PHONE : 904 356 - 5268 FAX: 904 356 - 2024 | Home | Contact Us | COMPANY INFORMATION Contact Us - firstcoastautomotive  Contact Us - firstcoastautomotive | Contact Us | Close panel | Call us now ! | Send us an email | Find us on the map | FIRST COAST AUTOMOTIVE | (PAINT+BODY+COLLISION REPAIRS) | Home | Contact Us | COMPANY INFORMATION | Searching | FIRST COAST AUTOMOTIVE | 2625 PEARL STREET NORTH | JACKSONVILLE, FLORIDA 32206 | PHONE: 1-904-356-5268 | FAX: 1-904-356-5268 | HOURS OF OPERATION: 8:00 AM - 5:00 PM | MONDAY - FRIDAY | ______________________________________________ | Show Full Map | Get Directions | Home | Contact Us | COMPANY INFORMATION",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://firstcoastautomotive.net/",
+    "status_code": 200,
+    "title": "Home - firstcoastautomotive",
+    "meta_description": "",
+    "text_content": "Home - firstcoastautomotive | Contact Us | Close panel | Call us now ! | Send us an email | Find us on the map | FIRST COAST AUTOMOTIVE | (PAINT+BODY+COLLISION REPAIRS) | Home | Contact Us | COMPANY INFORMATION | Searching | LOCATION: 2625 PEARL STREET NORTH | JACKSONVILLE, FLORIDA 32206 | PHONE : 904 356 - 5268 FAX: 904 356 - 2024 | Home | Contact Us | COMPANY INFORMATION",
+    "is_js_shell": true
+  },
+  "subpages": [
+    {
+      "url": "https://firstcoastautomotive.net/contact-us.shtml",
+      "status_code": 200,
+      "title": "Contact Us - firstcoastautomotive",
+      "meta_description": "",
+      "text_content": "Contact Us - firstcoastautomotive | Contact Us | Close panel | Call us now ! | Send us an email | Find us on the map | FIRST COAST AUTOMOTIVE | (PAINT+BODY+COLLISION REPAIRS) | Home | Contact Us | COMPANY INFORMATION | Searching | FIRST COAST AUTOMOTIVE | 2625 PEARL STREET NORTH | JACKSONVILLE, FLORIDA 32206 | PHONE: 1-904-356-5268 | FAX: 1-904-356-5268 | HOURS OF OPERATION: 8:00 AM - 5:00 PM | MONDAY - FRIDAY | ______________________________________________ | Show Full Map | Get Directions | Home | Contact Us | COMPANY INFORMATION",
+      "is_js_shell": false
+    }
+  ],
+  "pages_attempted": 12,
+  "pages_fetched": 2,
+  "total_attempts": 12,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [
+    "JavaScript-rendered site: static HTML contained minimal text"
+  ],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": true,
+  "cached_at": 1795344389.1497612
+}

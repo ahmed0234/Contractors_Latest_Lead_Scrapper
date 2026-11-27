@@ -1,0 +1,36 @@
+{
+  "domain": "goodguysautorepair.com",
+  "base_url": "https://goodguysautorepair.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "shop@goodguysautorepair.com"
+  ],
+  "all_phones": [
+    "5616318898",
+    "561-631-8898"
+  ],
+  "combined_text": "Good Guys Auto Repair  Good Guys Auto Repair | 0 | Skip to Content | Good Guys Auto Repair | Book Today | Open Menu Close Menu | Good Guys Auto Repair | Book Today | Open Menu Close Menu | Book Today | Your Local Good Guys | Good Guys Auto Repair offers a large selection of high-quality parts to choose from. Whether you\u2019re looking for a OEM aftermarket quality or straight from the manufacturer, we are sure to have what you are looking for! | Our Services | We offer a large selection of high-quality parts to choose from. Whether you\u2019re looking for a OEM aftermarket quality or straight from the manufacturer, we are sure to have what you are looking for! | Our helpful, friendly staff are always available to help you find exactly what you need. | We also offer fleet vehicle and dealer maintenance with discounted rates on labor and parts. | About us | Good Guys Auto Repair was founded back in 2013 with the idea of helping those who can't afford top tier dealer pricing. The underlying goal is to not only beat dealership cost, but to be as competitive as possible with any other auto repair shop around. We are here to help the community by keeping more money in your pockets, especially during these trying times. The value of the dollar doesn't carry as much weight as it used to, as a result we try our best to offer deals on everyday services that are updated monthly. | Contact Us | Here at Good Guys Auto Repair we want to be able to give back to our community. We\u2019re now offering a discounted rate for our services if you are Active or Retired military, First Responders, Teachers, or Students. If presented with a valid ID corresponding with one of these a 10% discount will be subtracted from your total amount owed! | It all started with a couple of good guys | Good Guys Auto Repair | Location | 1700 Avenue L | Riviera Beach FL, 33404 | Contact | Email: | shop@goodguysautorepair.com | 561-631-8898 | Good Guys Auto Repair | Location | 1700 Avenue L | Riviera Beach FL, 33404 | Contact | Email: | shop@goodguysautorepair.com | 561-631-8898 | url | https //www.goodguysautorepair.com | name | Good Guys Auto Repair | @context | http //schema.org | @type | WebSite | address | openingHours | @context | http //schema.org | @type | LocalBusiness",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://goodguysautorepair.com/",
+    "status_code": 200,
+    "title": "Good Guys Auto Repair",
+    "meta_description": "",
+    "text_content": "Good Guys Auto Repair | 0 | Skip to Content | Good Guys Auto Repair | Book Today | Open Menu Close Menu | Good Guys Auto Repair | Book Today | Open Menu Close Menu | Book Today | Your Local Good Guys | Good Guys Auto Repair offers a large selection of high-quality parts to choose from. Whether you\u2019re looking for a OEM aftermarket quality or straight from the manufacturer, we are sure to have what you are looking for! | Our Services | We offer a large selection of high-quality parts to choose from. Whether you\u2019re looking for a OEM aftermarket quality or straight from the manufacturer, we are sure to have what you are looking for! | Our helpful, friendly staff are always available to help you find exactly what you need. | We also offer fleet vehicle and dealer maintenance with discounted rates on labor and parts. | About us | Good Guys Auto Repair was founded back in 2013 with the idea of helping those who can't afford top tier dealer pricing. The underlying goal is to not only beat dealership cost, but to be as competitive as possible with any other auto repair shop around. We are here to help the community by keeping more money in your pockets, especially during these trying times. The value of the dollar doesn't carry as much weight as it used to, as a result we try our best to offer deals on everyday services that are updated monthly. | Contact Us | Here at Good Guys Auto Repair we want to be able to give back to our community. We\u2019re now offering a discounted rate for our services if you are Active or Retired military, First Responders, Teachers, or Students. If presented with a valid ID corresponding with one of these a 10% discount will be subtracted from your total amount owed! | It all started with a couple of good guys | Good Guys Auto Repair | Location | 1700 Avenue L | Riviera Beach FL, 33404 | Contact | Email: | shop@goodguysautorepair.com | 561-631-8898 | Good Guys Auto Repair | Location | 1700 Avenue L | Riviera Beach FL, 33404 | Contact | Email: | shop@goodguysautorepair.com | 561-631-8898 | url | https //www.goodguysautorepair.com | name | Good Guys Auto Repair | @context | http //schema.org | @type | WebSite | address | openingHours | @context | http //schema.org | @type | LocalBusiness",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 7,
+  "pages_fetched": 1,
+  "total_attempts": 7,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344331.0819407
+}

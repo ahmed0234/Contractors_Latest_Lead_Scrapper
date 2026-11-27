@@ -1,0 +1,31 @@
+{
+  "domain": "maacolongwood.com",
+  "base_url": "https://maacolongwood.com/",
+  "is_accessible": true,
+  "all_emails": [],
+  "all_phones": [],
+  "combined_text": "  ",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://maacolongwood.com/",
+    "status_code": 200,
+    "title": "",
+    "meta_description": "",
+    "text_content": "",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 11,
+  "pages_fetched": 1,
+  "total_attempts": 11,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": true,
+  "cached_at": 1795344503.3303914
+}

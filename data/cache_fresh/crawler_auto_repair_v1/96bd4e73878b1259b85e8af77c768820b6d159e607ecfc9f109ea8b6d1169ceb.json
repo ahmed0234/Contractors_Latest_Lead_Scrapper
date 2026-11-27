@@ -1,0 +1,72 @@
+{
+  "domain": "spinelliautorepair.com",
+  "base_url": "https://spinelliautorepair.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "tom@spinelliautorepair.com"
+  ],
+  "all_phones": [
+    "(239) 257-7287"
+  ],
+  "combined_text": "Spinelli Automotive | Mobile mechanic near me Spinelli Automotive is a full service mobile mechanic operation designed to offer honest and reliable service to the greater Lee County area. --> Spinelli Automotive | Mobile mechanic near me | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | @context | https //schema.org/ | @type | WebSite | name | Spinelli Automotive | url | https //www.spinelliautorepair.com Services | Spinelli Automotive Mobile mechanic, roadside assistance, brakes, suspension, engine repair, transmission services, electrical repair, starting and charging, air conditioning, and pre-purchase inspection. Services | Spinelli Automotive | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com About | Spinelli Automotive Spinelli Automotive is a full service mobile mechanic operation designed to offer honest and reliable service to the greater Lee County area. About | Spinelli Automotive | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com Contact | Spinelli Automotive Mobile mechanic Lee County, FL. Spinelli Automotive is a full service mobile mechanic operation designed to offer honest and reliable service to the greater Lee County area. Contact | Spinelli Automotive | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com Warranty | Spinelli Automotive Spinelli Automotive warranty policy. \u200bFull Service Mobile Auto Mechanic\nEstablished 2019                    Revamped 2025 Warranty | Spinelli Automotive | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://spinelliautorepair.com/",
+    "status_code": 200,
+    "title": "Spinelli Automotive | Mobile mechanic near me",
+    "meta_description": "Spinelli Automotive is a full service mobile mechanic operation designed to offer honest and reliable service to the greater Lee County area.",
+    "text_content": "--> Spinelli Automotive | Mobile mechanic near me | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | @context | https //schema.org/ | @type | WebSite | name | Spinelli Automotive | url | https //www.spinelliautorepair.com",
+    "is_js_shell": true
+  },
+  "subpages": [
+    {
+      "url": "https://www.spinelliautorepair.com/services",
+      "status_code": 200,
+      "title": "Services | Spinelli Automotive",
+      "meta_description": "Mobile mechanic, roadside assistance, brakes, suspension, engine repair, transmission services, electrical repair, starting and charging, air conditioning, and pre-purchase inspection.",
+      "text_content": "Services | Spinelli Automotive | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com",
+      "is_js_shell": false
+    },
+    {
+      "url": "https://www.spinelliautorepair.com/about",
+      "status_code": 200,
+      "title": "About | Spinelli Automotive",
+      "meta_description": "Spinelli Automotive is a full service mobile mechanic operation designed to offer honest and reliable service to the greater Lee County area.",
+      "text_content": "About | Spinelli Automotive | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com",
+      "is_js_shell": false
+    },
+    {
+      "url": "https://www.spinelliautorepair.com/contact",
+      "status_code": 200,
+      "title": "Contact | Spinelli Automotive",
+      "meta_description": "Mobile mechanic Lee County, FL. Spinelli Automotive is a full service mobile mechanic operation designed to offer honest and reliable service to the greater Lee County area.",
+      "text_content": "Contact | Spinelli Automotive | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com",
+      "is_js_shell": false
+    },
+    {
+      "url": "https://www.spinelliautorepair.com/warranty-1",
+      "status_code": 200,
+      "title": "Warranty | Spinelli Automotive",
+      "meta_description": "Spinelli Automotive warranty policy. \u200bFull Service Mobile Auto Mechanic\nEstablished 2019                    Revamped 2025",
+      "text_content": "Warranty | Spinelli Automotive | top of page | Home | About | Services | Contact | Warranty | More | Use tab to navigate through the menu items. | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com | bottom of page | Spinelli Automotive 2025 | (239) 257-7287 | tom@spinelliautorepair.com | Site Design by Skydancerart.com",
+      "is_js_shell": false
+    }
+  ],
+  "pages_attempted": 11,
+  "pages_fetched": 5,
+  "total_attempts": 11,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "https://www.spinelliautorepair.com/services"
+  ],
+  "notes": [
+    "JavaScript-rendered site: static HTML contained minimal text"
+  ],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344897.057285
+}

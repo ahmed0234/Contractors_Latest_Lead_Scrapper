@@ -1,0 +1,37 @@
+{
+  "domain": "brandontransmission.com",
+  "base_url": "https://brandontransmission.com/",
+  "is_accessible": true,
+  "all_emails": [],
+  "all_phones": [
+    "8136891215",
+    "813-689-1215"
+  ],
+  "combined_text": "Brandon Transmission - Transmission Repair | Brandon, FL FREE towing on internal repairs. FREE multipoint checkups. FREE transmission diagnostic. Transmission, Transmission Repair, Auto Repair. Call 813-689-1215. Brandon Transmission - Transmission Repair | Brandon, FL | 813-689-1215 | Brandon's Oldest & Most Trusted Transmission Repair Facility | HOME | TRANSMISSIONS | FULL SERVICE AUTO REPAIR | CONTACT US | Your transmission specialist | Get comprehensive transmission and auto repair services by us. | Comprehensive auto repair | Your vehicle is too special to entrust to just anyone. You deserve the best to keep your vehicle running smoothly. We offer FREE towing on internal repairs. | Quality transmission work | Are you experiencing transmission problems? We offer a FREE transmission diagnostic to pinpoint the problem. We have more than 40 years of experience with transmission repair. | ASE Certified mechanics | You'll get honest and experienced ASE certified mechanics when you bring your vehicle to Brandon Transmission for auto repair work. Since 1974, we have been the experts to trust. | We offer FREE transmission diagnostics and FREE multi-point checkups. | Privacy Policy | Do Not Share My Information | Conditions of Use | Notice and Take Down Policy | Website Accessibility Policy | \u00a9 2026 The content on this website is owned by us and our licensors. Do not copy any content (including images) without our consent. | Share by: | ELEMENT--> | {{placeholder_retargeting_pixel}} | {{placeholder_dpni}} | {{placeholder_footer_reserve1}} | {{placeholder_footer_reserve2}} | {{placeholder_footer_reserve3}} | {{placeholder_footer_reserve4}} | {{placeholder_footer_reserve5}} | {{placeholder_footer_reserve6}} | {{placeholder_footer_reserve7}} | @context | https //schema.org | @type | WebSite | name | Brandon Transmission | url | https //www.transmissionsofbrandon.com/",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://brandontransmission.com/",
+    "status_code": 200,
+    "title": "Brandon Transmission - Transmission Repair | Brandon, FL",
+    "meta_description": "FREE towing on internal repairs. FREE multipoint checkups. FREE transmission diagnostic. Transmission, Transmission Repair, Auto Repair. Call 813-689-1215.",
+    "text_content": "Brandon Transmission - Transmission Repair | Brandon, FL | 813-689-1215 | Brandon's Oldest & Most Trusted Transmission Repair Facility | HOME | TRANSMISSIONS | FULL SERVICE AUTO REPAIR | CONTACT US | Your transmission specialist | Get comprehensive transmission and auto repair services by us. | Comprehensive auto repair | Your vehicle is too special to entrust to just anyone. You deserve the best to keep your vehicle running smoothly. We offer FREE towing on internal repairs. | Quality transmission work | Are you experiencing transmission problems? We offer a FREE transmission diagnostic to pinpoint the problem. We have more than 40 years of experience with transmission repair. | ASE Certified mechanics | You'll get honest and experienced ASE certified mechanics when you bring your vehicle to Brandon Transmission for auto repair work. Since 1974, we have been the experts to trust. | We offer FREE transmission diagnostics and FREE multi-point checkups. | Privacy Policy | Do Not Share My Information | Conditions of Use | Notice and Take Down Policy | Website Accessibility Policy | \u00a9 2026 The content on this website is owned by us and our licensors. Do not copy any content (including images) without our consent. | Share by: | ELEMENT--> | {{placeholder_retargeting_pixel}} | {{placeholder_dpni}} | {{placeholder_footer_reserve1}} | {{placeholder_footer_reserve2}} | {{placeholder_footer_reserve3}} | {{placeholder_footer_reserve4}} | {{placeholder_footer_reserve5}} | {{placeholder_footer_reserve6}} | {{placeholder_footer_reserve7}} | @context | https //schema.org | @type | WebSite | name | Brandon Transmission | url | https //www.transmissionsofbrandon.com/",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 10,
+  "pages_fetched": 1,
+  "total_attempts": 10,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "https://brandontransmission.com/transmissions/1263976",
+    "https://brandontransmission.com/full-service-auto-repair/1263958"
+  ],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344026.0941164
+}

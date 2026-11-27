@@ -1,0 +1,31 @@
+{
+  "domain": "ptacit.com",
+  "base_url": "https://ptacit.com/",
+  "is_accessible": true,
+  "all_emails": [],
+  "all_phones": [],
+  "combined_text": "PTAC IT  PTAC IT | Presicion Tune Auto Care IT Intranet Site | Welcome to the PTAC IT Intranet Site (powered by | TheTechService | ) | This site is for internal use, only by select | Precision Tune | Store Locations that have opted to have their IT Services uniformed and managed by | TheTechService | . | If you are currently employed by Precision Tune, you can access all of your support materials from your Google Chrome Browser, while logged into your | PTAC Google Apps Account | . If you need assistance, feel free to have your District Manager contact us on your behalf, or provide you our contact information so you can contact us yourself - or if the need is critical, you can find our contact information on our website: | www.thetechservice.com | . | If you are a PTAC customer looking for more information on Precision Tune Auto Care Services, please visit the main PTAC website: | www.precisiontune.com | .",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://ptacit.com/",
+    "status_code": 200,
+    "title": "PTAC IT",
+    "meta_description": "",
+    "text_content": "PTAC IT | Presicion Tune Auto Care IT Intranet Site | Welcome to the PTAC IT Intranet Site (powered by | TheTechService | ) | This site is for internal use, only by select | Precision Tune | Store Locations that have opted to have their IT Services uniformed and managed by | TheTechService | . | If you are currently employed by Precision Tune, you can access all of your support materials from your Google Chrome Browser, while logged into your | PTAC Google Apps Account | . If you need assistance, feel free to have your District Manager contact us on your behalf, or provide you our contact information so you can contact us yourself - or if the need is critical, you can find our contact information on our website: | www.thetechservice.com | . | If you are a PTAC customer looking for more information on Precision Tune Auto Care Services, please visit the main PTAC website: | www.precisiontune.com | .",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 11,
+  "pages_fetched": 1,
+  "total_attempts": 11,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": true,
+  "cached_at": 1795343818.7036898
+}

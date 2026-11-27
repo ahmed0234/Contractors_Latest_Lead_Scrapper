@@ -1,0 +1,31 @@
+{
+  "domain": "nubrakes.com",
+  "base_url": "https://nubrakes.com/",
+  "is_accessible": false,
+  "all_emails": [],
+  "all_phones": [],
+  "combined_text": "",
+  "error_message": "Website protected by web firewall / bot challenge (not bypassed)",
+  "status_code": 403,
+  "status_category": "Bot Challenge",
+  "homepage": {
+    "url": "https://nubrakes.com/",
+    "status_code": 403,
+    "title": "403: Forbidden",
+    "meta_description": "",
+    "text_content": "403: Forbidden | This request was blocked | 403 Forbidden | bom1::7tckf-1795344637570-540e6f501302",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 0,
+  "pages_fetched": 0,
+  "total_attempts": 1,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": false,
+  "probes_checked": false,
+  "cached_at": 1795344638.1253555
+}

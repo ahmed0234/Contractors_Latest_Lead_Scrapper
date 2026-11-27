@@ -1,0 +1,57 @@
+{
+  "domain": "forddieselmiami.com",
+  "base_url": "https://forddieselmiami.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "filler@godaddy.com",
+    "service@forddieselmiami.com"
+  ],
+  "all_phones": [
+    "3059947791",
+    "(305) 994-7791"
+  ],
+  "combined_text": "The Ford Diesel Service  The Ford Diesel Service | Home | Contact Us | Services | More | Home | Contact Us | Services | Signed in as: | filler@godaddy.com | Home | Contact Us | Services | (305) 994-7791 | The Ford Diesel Service | Family Owned, Fine Tuned | About Us | The Ford Diesel Service was started 5 years ago by FORD Certified and Trained Senior Master Technician Omar Tijerino. | Omar has over 22 years working and specializing Ford Vehicles. ASE certified and with 7 additional onsite certified technicians . | The shop is a 11,000sqft facility with 7 lifts and has the latest in Ford OEM in diagnostic equipment. | Our services include maintenance, diagnostics and repairs. | Copyright \u00a9 2019 The Ford Diesel Service - All Rights Reserved. The Ford Diesel Service | The Ford Diesel Service  The Ford Diesel Service | The Ford Diesel Service | Home | Contact Us | Services | More | Home | Contact Us | Services | Signed in as: | filler@godaddy.com | Home | Contact Us | Services | The Ford Diesel Service | Family Owned, Fine Tuned | Our Services | Maintenance | Oil Changes | Brakes | Transmission | Differentials | Suspensions | Tuneups | Diagnostics | Check engine lights | Rough Running | No Starts | Loss of power | Repairs | Head Gaskets | Oil Coolers | EGR's | Blown Pistons | Transmission | Suspension | Blown Engine | Copyright \u00a9 2019 The Ford Diesel Service - All Rights Reserved. The Ford Diesel Service | The Ford Diesel Service  The Ford Diesel Service | The Ford Diesel Service | Home | Contact Us | Services | More | Home | Contact Us | Services | Signed in as: | filler@godaddy.com | Home | Contact Us | Services | The Ford Diesel Service | Family Owned, Fine Tuned | Contact Us | Send us a message letting us know what is going on with your vehicle, and we will get back to you as soon as possible. | The Ford Diesel Service | 8230 NW 56th St, Miami, Florida 33166, United States | (305) 994-7791 | service@forddieselmiami.com | Hours | Monday - Friday: 9:00 am - 6:00 pm | Saturday: 9:00 am - 3:00 pm | Sunday: Closed | Copyright \u00a9 2019 The Ford Diesel Service - All Rights Reserved.",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://forddieselmiami.com/",
+    "status_code": 200,
+    "title": "The Ford Diesel Service",
+    "meta_description": "",
+    "text_content": "The Ford Diesel Service | Home | Contact Us | Services | More | Home | Contact Us | Services | Signed in as: | filler@godaddy.com | Home | Contact Us | Services | (305) 994-7791 | The Ford Diesel Service | Family Owned, Fine Tuned | About Us | The Ford Diesel Service was started 5 years ago by FORD Certified and Trained Senior Master Technician Omar Tijerino. | Omar has over 22 years working and specializing Ford Vehicles. ASE certified and with 7 additional onsite certified technicians . | The shop is a 11,000sqft facility with 7 lifts and has the latest in Ford OEM in diagnostic equipment. | Our services include maintenance, diagnostics and repairs. | Copyright \u00a9 2019 The Ford Diesel Service - All Rights Reserved.",
+    "is_js_shell": false
+  },
+  "subpages": [
+    {
+      "url": "https://forddieselmiami.com/services",
+      "status_code": 200,
+      "title": "The Ford Diesel Service | The Ford Diesel Service",
+      "meta_description": "",
+      "text_content": "The Ford Diesel Service | The Ford Diesel Service | Home | Contact Us | Services | More | Home | Contact Us | Services | Signed in as: | filler@godaddy.com | Home | Contact Us | Services | The Ford Diesel Service | Family Owned, Fine Tuned | Our Services | Maintenance | Oil Changes | Brakes | Transmission | Differentials | Suspensions | Tuneups | Diagnostics | Check engine lights | Rough Running | No Starts | Loss of power | Repairs | Head Gaskets | Oil Coolers | EGR's | Blown Pistons | Transmission | Suspension | Blown Engine | Copyright \u00a9 2019 The Ford Diesel Service - All Rights Reserved.",
+      "is_js_shell": false
+    },
+    {
+      "url": "https://forddieselmiami.com/contact-us",
+      "status_code": 200,
+      "title": "The Ford Diesel Service | The Ford Diesel Service",
+      "meta_description": "",
+      "text_content": "The Ford Diesel Service | The Ford Diesel Service | Home | Contact Us | Services | More | Home | Contact Us | Services | Signed in as: | filler@godaddy.com | Home | Contact Us | Services | The Ford Diesel Service | Family Owned, Fine Tuned | Contact Us | Send us a message letting us know what is going on with your vehicle, and we will get back to you as soon as possible. | The Ford Diesel Service | 8230 NW 56th St, Miami, Florida 33166, United States | (305) 994-7791 | service@forddieselmiami.com | Hours | Monday - Friday: 9:00 am - 6:00 pm | Saturday: 9:00 am - 3:00 pm | Sunday: Closed | Copyright \u00a9 2019 The Ford Diesel Service - All Rights Reserved.",
+      "is_js_shell": false
+    }
+  ],
+  "pages_attempted": 9,
+  "pages_fetched": 3,
+  "total_attempts": 9,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "https://forddieselmiami.com/services",
+    "http://forddieselmiami.com/services"
+  ],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344929.0604854
+}

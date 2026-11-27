@@ -1,0 +1,36 @@
+{
+  "domain": "scottfinlay.com",
+  "base_url": "https://scottfinlay.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "info@scottfinlay.com"
+  ],
+  "all_phones": [
+    "3056616479",
+    "(305) 661-6479"
+  ],
+  "combined_text": "Scott Finlay Motorsports \u2013 Porsche Specialist in South Miami Expert Porsche service and repair in South Miami. Scott Finlay brings decades of racing heritage and factory-level credentials to every vehicle. Scott Finlay Motorsports \u2013 Porsche Specialist in South Miami | Scott Finlay Motorsports | Home | Services | Contact | Scott Finlay Motorsports | Located in the heart of South Miami, serving Porsche owners and enthusiasts for years. | Conveniently located across from Sunset Place and only a block from the South Miami Metrorail Station. | View Our Services | Services | At Scott Finlay Motorsports you will have your Porsche serviced by a person who is trained and dedicated to servicing only fine Porsche automobiles. Scott Finlay has the knowledge and credentials needed to maintain your automobile. | 4-wheel alignment | A/C Repair, leak down test, evac and recover | Axles, CV Joints, Boot replacements and maintenance | Brake calipers, pads, rotors, lines replacement and services | Exhaust installation, mufflers, manifolds, leak test, repair & maintenance | Hydraulic fluid system flushing, fluid replacement | Battery replacement and battery maintenance | Oil, filter and lube services | Cooling system maintenance | Spark Plugs, Coils, Ignition systems | Tires, wheels, mounting and balancing | Transmission filter, fluid and flushing services | Transmission, clutch kits, synchros, flywheels and more\u2026 | Contact & Location | Address | 5752 Progress Rd, South Miami, FL 33143 | Phone | (305) 661-6479 | Email | info@scottfinlay.com | Scott Finlay Motorsports | Quick Links | Home | Services | Contact | Contact | 5752 Progress Rd, South Miami, FL 33143 (305) 661-6479 info@scottfinlay.com | Copyright \u00a9 Scott Finlay Motorsports | Scott Finlay Motorsports | Quick Links | Home | Services | Contact | Contact | 5752 Progress Rd, South Miami, FL 33143 (305) 661-6479 info@scottfinlay.com | Copyright \u00a9 Scott Finlay Motorsports | @context | https //schema.org | @graph | @type | WebSite | @id | https //scottfinlay.com/#website | name | Scott Finlay Motorsports | url | https //scottfinlay.com/ | @type | AutoRepair | @id | https //scottfinlay.com/#organization | name | Scott Finlay Motorsports | url | https //scottfinlay.com/ | telephone | (305) 661-6479 | email | info@scottfinlay.com | address | @type | PostalAddress | streetAddress | 5752 Progress Rd | addressLocality | South Miami | addressRegion | FL | postalCode | 33143 | addressCountry | US | @type | WebPage | @id | https //scottfinlay.com/#webpage | url | https //scottfinlay.com/ | name | Scott Finlay Motorsports \u2013 Porsche Specialist in South Miami | isPartOf | @id | https //scottfinlay.com/#website | about | @id | https //scottfinlay.com/#organization | datePublished | 2024-01-01 | dateModified | 2026-07-14",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://scottfinlay.com/",
+    "status_code": 200,
+    "title": "Scott Finlay Motorsports \u2013 Porsche Specialist in South Miami",
+    "meta_description": "Expert Porsche service and repair in South Miami. Scott Finlay brings decades of racing heritage and factory-level credentials to every vehicle.",
+    "text_content": "Scott Finlay Motorsports \u2013 Porsche Specialist in South Miami | Scott Finlay Motorsports | Home | Services | Contact | Scott Finlay Motorsports | Located in the heart of South Miami, serving Porsche owners and enthusiasts for years. | Conveniently located across from Sunset Place and only a block from the South Miami Metrorail Station. | View Our Services | Services | At Scott Finlay Motorsports you will have your Porsche serviced by a person who is trained and dedicated to servicing only fine Porsche automobiles. Scott Finlay has the knowledge and credentials needed to maintain your automobile. | 4-wheel alignment | A/C Repair, leak down test, evac and recover | Axles, CV Joints, Boot replacements and maintenance | Brake calipers, pads, rotors, lines replacement and services | Exhaust installation, mufflers, manifolds, leak test, repair & maintenance | Hydraulic fluid system flushing, fluid replacement | Battery replacement and battery maintenance | Oil, filter and lube services | Cooling system maintenance | Spark Plugs, Coils, Ignition systems | Tires, wheels, mounting and balancing | Transmission filter, fluid and flushing services | Transmission, clutch kits, synchros, flywheels and more\u2026 | Contact & Location | Address | 5752 Progress Rd, South Miami, FL 33143 | Phone | (305) 661-6479 | Email | info@scottfinlay.com | Scott Finlay Motorsports | Quick Links | Home | Services | Contact | Contact | 5752 Progress Rd, South Miami, FL 33143 (305) 661-6479 info@scottfinlay.com | Copyright \u00a9 Scott Finlay Motorsports | Scott Finlay Motorsports | Quick Links | Home | Services | Contact | Contact | 5752 Progress Rd, South Miami, FL 33143 (305) 661-6479 info@scottfinlay.com | Copyright \u00a9 Scott Finlay Motorsports | @context | https //schema.org | @graph | @type | WebSite | @id | https //scottfinlay.com/#website | name | Scott Finlay Motorsports | url | https //scottfinlay.com/ | @type | AutoRepair | @id | https //scottfinlay.com/#organization | name | Scott Finlay Motorsports | url | https //scottfinlay.com/ | telephone | (305) 661-6479 | email | info@scottfinlay.com | address | @type | PostalAddress | streetAddress | 5752 Progress Rd | addressLocality | South Miami | addressRegion | FL | postalCode | 33143 | addressCountry | US | @type | WebPage | @id | https //scottfinlay.com/#webpage | url | https //scottfinlay.com/ | name | Scott Finlay Motorsports \u2013 Porsche Specialist in South Miami | isPartOf | @id | https //scottfinlay.com/#website | about | @id | https //scottfinlay.com/#organization | datePublished | 2024-01-01 | dateModified | 2026-07-14",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 7,
+  "pages_fetched": 1,
+  "total_attempts": 7,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344802.7437263
+}

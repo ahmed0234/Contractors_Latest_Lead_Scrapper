@@ -1,0 +1,46 @@
+{
+  "domain": "dentdeletion.com",
+  "base_url": "https://dentdeletion.com/",
+  "is_accessible": true,
+  "all_emails": [
+    "michael@dentdeletion.com"
+  ],
+  "all_phones": [
+    "(863) 670-8880"
+  ],
+  "combined_text": "HOME | Dent Deletion  HOME | Dent Deletion | top of page | HOME | SERVICES | OUR WORK | CONTACT US | More | Use tab to navigate through the menu items. | Mobile Auto Paintless Dent Removal | Dent Deletion | SERVICES | SERVICES | PDR | Paintless Dent R emoval | OUR WORK | OUR WORK | A collection of cars we've preformed paintless dent removal on | Contact Us | Michael | Ralston | Mobile (863) 670-8880 | Email | michael@dentdeletion.com | OPENING HOURS: | Monday - Friday: 9am - 5pm\u200b\u200b\u200b | Conta ct us for an estimate! | \u200b | CONTACT | bottom of page | @context | https //schema.org/ | @type | WebSite | name | Dent Deletion | url | https //www.dentdeletion.com SERVICES | Dent Deletion  SERVICES | Dent Deletion | top of page | HOME | SERVICES | OUR WORK | CONTACT US | More | Use tab to navigate through the menu items. | Services Provided | PDR (Paintless Dent Removal) | Get a Free Quote | This is a Paragraph. Click on \"Edit Text\" or double click on the text box to start editing the content. | First Name | Last Name | Email | Send | Thanks for submitting! | bottom of page",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://dentdeletion.com/",
+    "status_code": 200,
+    "title": "HOME | Dent Deletion",
+    "meta_description": "",
+    "text_content": "HOME | Dent Deletion | top of page | HOME | SERVICES | OUR WORK | CONTACT US | More | Use tab to navigate through the menu items. | Mobile Auto Paintless Dent Removal | Dent Deletion | SERVICES | SERVICES | PDR | Paintless Dent R emoval | OUR WORK | OUR WORK | A collection of cars we've preformed paintless dent removal on | Contact Us | Michael | Ralston | Mobile (863) 670-8880 | Email | michael@dentdeletion.com | OPENING HOURS: | Monday - Friday: 9am - 5pm\u200b\u200b\u200b | Conta ct us for an estimate! | \u200b | CONTACT | bottom of page | @context | https //schema.org/ | @type | WebSite | name | Dent Deletion | url | https //www.dentdeletion.com",
+    "is_js_shell": false
+  },
+  "subpages": [
+    {
+      "url": "https://www.dentdeletion.com/services-5",
+      "status_code": 200,
+      "title": "SERVICES | Dent Deletion",
+      "meta_description": "",
+      "text_content": "SERVICES | Dent Deletion | top of page | HOME | SERVICES | OUR WORK | CONTACT US | More | Use tab to navigate through the menu items. | Services Provided | PDR (Paintless Dent Removal) | Get a Free Quote | This is a Paragraph. Click on \"Edit Text\" or double click on the text box to start editing the content. | First Name | Last Name | Email | Send | Thanks for submitting! | bottom of page",
+      "is_js_shell": false
+    }
+  ],
+  "pages_attempted": 13,
+  "pages_fetched": 2,
+  "total_attempts": 13,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "https://www.dentdeletion.com/services-5"
+  ],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": true,
+  "cached_at": 1795344137.1306565
+}

@@ -1,0 +1,31 @@
+{
+  "domain": "downsouthperf.com",
+  "base_url": "https://downsouthperf.com/",
+  "is_accessible": true,
+  "all_emails": [],
+  "all_phones": [],
+  "combined_text": "Down South Performance \u2014 South Florida Performance & Auto Repair Down South Performance \u2014 South Florida performance, chassis, and custom builds. Foxbody Mustangs, engine swaps, suspension, and honest diagnostics. Down South Performance \u2014 South Florida Performance & Auto Repair | Down South Performance | Services | About | Contact | Call / Text | Down South Performance And Auto Repair | Built Right. Driven Hard. | \ud83d\udcde Call / Text for Quote | What We Do | Services | Specializing in both general repairs and performance. | Who We Are | Get In Touch | Contact | Got a project? Call or text for a quote. | \ud83d\udcde Call / Text Now | Name | Phone or Email | Vehicle | What do you need? | Send Message | MAP Google Maps embed goes here once the address is set. | Add the embed URL to data.js \u2192 contact.mapEmbedUrl | \u00a9 Down South Performance. South Florida. | &copy; Down South Performance. South Florida.",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://downsouthperf.com/",
+    "status_code": 200,
+    "title": "Down South Performance \u2014 South Florida Performance & Auto Repair",
+    "meta_description": "Down South Performance \u2014 South Florida performance, chassis, and custom builds. Foxbody Mustangs, engine swaps, suspension, and honest diagnostics.",
+    "text_content": "Down South Performance \u2014 South Florida Performance & Auto Repair | Down South Performance | Services | About | Contact | Call / Text | Down South Performance And Auto Repair | Built Right. Driven Hard. | \ud83d\udcde Call / Text for Quote | What We Do | Services | Specializing in both general repairs and performance. | Who We Are | Get In Touch | Contact | Got a project? Call or text for a quote. | \ud83d\udcde Call / Text Now | Name | Phone or Email | Vehicle | What do you need? | Send Message | MAP Google Maps embed goes here once the address is set. | Add the embed URL to data.js \u2192 contact.mapEmbedUrl | \u00a9 Down South Performance. South Florida. | &copy; Down South Performance. South Florida.",
+    "is_js_shell": false
+  },
+  "subpages": [],
+  "pages_attempted": 7,
+  "pages_fetched": 1,
+  "total_attempts": 7,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344184.0567858
+}

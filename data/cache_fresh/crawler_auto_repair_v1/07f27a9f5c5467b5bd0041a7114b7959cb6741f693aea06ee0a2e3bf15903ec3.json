@@ -1,0 +1,49 @@
+{
+  "domain": "jccflorida.net",
+  "base_url": "https://jccflorida.net/",
+  "is_accessible": true,
+  "all_emails": [
+    "jcc@jccflorida.net"
+  ],
+  "all_phones": [
+    "(863)420-7100",
+    "(863) 420-7100",
+    "(863) 420-7199",
+    "(863) 676-3426"
+  ],
+  "combined_text": "Home  \ufeff Home | Jaime's Collision Center | Menu | Home | Contact Us/Locations | BLOG | Call us (863)420-7100 | JAIME'S COLLISION CENTER YOUR CAR IN GOOD HANDS! | ACCIDENT? We can help with Affordable Repairs | Let our Experts Fix your car | We are proud of Our results | Welcome! | If you are looking to have your car repaired and need real experts, you came to the right place, in Jaime's Collision Center we are committed to Excellence and to offer the best service oriented to our Clients. We want to win your business. Let us help! | Like us in Facebook today . . . | Services | JAIME'S COLLISION CENTER will be there with you on every stage of your vehicle repair. Our certified technicians will work on your car while our staff resolve and process all the required paperwork with your insurance company. | HABLAMOS ESPANOL | Sabemos lo importante que es poder comunicarte efectivamente durante las reparaciones de tu vehiculo, asi que nuestro personal esta listo para atenderte y comprender cada una de tus necesidades en tu idioma. | Stages of Repairs | Prepare estimate, Inspection | Authorization and Insurance Approval | Repairs begin | Detect hidden damages | Order Genuine parts | Unibody Repairs | Vehicle paint process and Reassembly | Test drive, Final inspection and delivery | Testimonials | \u201cText Here\u201d | Full Name, City State | JCCFLORIDA.NET \u00a9 2025 | Privacy policy | 2801 US HIGHWAY 17/92 W, HAINES CITY, FLORIDA 33844. Phone: (863) 420-7100. Fax: (863) 420-7199 | JCCFLORIDA.NET &copy; 2025 | Privacy policy | 2801 US HIGHWAY 17/92 W, HAINES CITY, FLORIDA 33844. Phone: (863) 420-7100. Fax: (863) 420-7199 Contact Us  Contact Us | JCC | Menu | Home | Contact Us/Locations | BLOG | Call us (863)420-7100 | Contact Us | We are ready to answer any question you would have: | Contact Form | Haines City | 2801 US Highway 17 92 W, Haines City FL 33844 | (863) 420-7100 Phone: | (863) 420-7199 FAX: | E-mail: | jcc@jccflorida.net | Lake Wales | 22491 US-27, Lake Wales, FL 33859 | (863) 676-3426 Phone: | JCCFLORIDA.NET \u00a9 2025 | Privacy policy | 2801 US HIGHWAY 17/92 W, HAINES CITY FLORIDA 33844. Phone: (863) 420-7100. Fax: (863) 420-7199 | JCCFLORIDA.NET &copy; 2025 | Privacy policy | 2801 US HIGHWAY 17/92 W, HAINES CITY FLORIDA 33844. Phone: (863) 420-7100. Fax: (863) 420-7199",
+  "error_message": null,
+  "status_code": 200,
+  "status_category": "OK",
+  "homepage": {
+    "url": "https://jccflorida.net/",
+    "status_code": 200,
+    "title": "Home",
+    "meta_description": "",
+    "text_content": "\ufeff Home | Jaime's Collision Center | Menu | Home | Contact Us/Locations | BLOG | Call us (863)420-7100 | JAIME'S COLLISION CENTER YOUR CAR IN GOOD HANDS! | ACCIDENT? We can help with Affordable Repairs | Let our Experts Fix your car | We are proud of Our results | Welcome! | If you are looking to have your car repaired and need real experts, you came to the right place, in Jaime's Collision Center we are committed to Excellence and to offer the best service oriented to our Clients. We want to win your business. Let us help! | Like us in Facebook today . . . | Services | JAIME'S COLLISION CENTER will be there with you on every stage of your vehicle repair. Our certified technicians will work on your car while our staff resolve and process all the required paperwork with your insurance company. | HABLAMOS ESPANOL | Sabemos lo importante que es poder comunicarte efectivamente durante las reparaciones de tu vehiculo, asi que nuestro personal esta listo para atenderte y comprender cada una de tus necesidades en tu idioma. | Stages of Repairs | Prepare estimate, Inspection | Authorization and Insurance Approval | Repairs begin | Detect hidden damages | Order Genuine parts | Unibody Repairs | Vehicle paint process and Reassembly | Test drive, Final inspection and delivery | Testimonials | \u201cText Here\u201d | Full Name, City State | JCCFLORIDA.NET \u00a9 2025 | Privacy policy | 2801 US HIGHWAY 17/92 W, HAINES CITY, FLORIDA 33844. Phone: (863) 420-7100. Fax: (863) 420-7199 | JCCFLORIDA.NET &copy; 2025 | Privacy policy | 2801 US HIGHWAY 17/92 W, HAINES CITY, FLORIDA 33844. Phone: (863) 420-7100. Fax: (863) 420-7199",
+    "is_js_shell": false
+  },
+  "subpages": [
+    {
+      "url": "https://jccflorida.net/index-4.html",
+      "status_code": 200,
+      "title": "Contact Us",
+      "meta_description": "",
+      "text_content": "Contact Us | JCC | Menu | Home | Contact Us/Locations | BLOG | Call us (863)420-7100 | Contact Us | We are ready to answer any question you would have: | Contact Form | Haines City | 2801 US Highway 17 92 W, Haines City FL 33844 | (863) 420-7100 Phone: | (863) 420-7199 FAX: | E-mail: | jcc@jccflorida.net | Lake Wales | 22491 US-27, Lake Wales, FL 33859 | (863) 676-3426 Phone: | JCCFLORIDA.NET \u00a9 2025 | Privacy policy | 2801 US HIGHWAY 17/92 W, HAINES CITY FLORIDA 33844. Phone: (863) 420-7100. Fax: (863) 420-7199 | JCCFLORIDA.NET &copy; 2025 | Privacy policy | 2801 US HIGHWAY 17/92 W, HAINES CITY FLORIDA 33844. Phone: (863) 420-7100. Fax: (863) 420-7199",
+      "is_js_shell": false
+    }
+  ],
+  "pages_attempted": 9,
+  "pages_fetched": 2,
+  "total_attempts": 9,
+  "failed_urls": [],
+  "robots_blocked_urls": [],
+  "discovered_relevant_urls": [
+    "https://jccflorida.net/index.html"
+  ],
+  "notes": [],
+  "incomplete_reason": "",
+  "sitemap_checked": true,
+  "probes_checked": false,
+  "cached_at": 1795344387.2598574
+}
