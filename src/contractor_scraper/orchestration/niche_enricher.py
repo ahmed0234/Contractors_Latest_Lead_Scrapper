@@ -288,6 +288,13 @@ class NicheLeadEnricher(ABC, Generic[R]):
     def _status_label(self, res: R) -> str:
         return str(getattr(res, "qualification_status", res.classification))
 
+    def _input_column_values(self, res: R, columns: ColumnMap) -> dict[int, str]:
+        """Values written into other pre-existing input columns, by column index (default: none).
+
+        An empty value leaves the original cell untouched.
+        """
+        return {}
+
     def _has_evidence(self, res: R) -> bool:
         """QA: a qualified verdict must carry evidence."""
         return bool(res.reasoning)
@@ -343,6 +350,14 @@ class NicheLeadEnricher(ABC, Generic[R]):
         if not parsed.netloc or "." not in parsed.netloc:
             return ""
         return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+    def _row_crawl_url(self, row: list[str], columns: ColumnMap) -> str:
+        """URL to crawl for an input row (default: the website column, see `_select_crawl_url`)."""
+
+        def cell(idx: int | None) -> str:
+            return row[idx].strip() if idx is not None and idx < len(row) else ""
+
+        return self._select_crawl_url(cell(columns.website), cell(columns.raw_website))
 
     def _select_crawl_url(self, clean_raw: str, raw_raw: str) -> str:
         """Choose the URL to crawl: the clean website, or a same-domain branch/profile page when more specific."""
@@ -474,7 +489,7 @@ class NicheLeadEnricher(ABC, Generic[R]):
                 return r[idx].strip() if idx is not None and idx < len(r) else ""
 
             company = cell(columns.company) or cell(columns.alt_name)
-            crawl_url = self._select_crawl_url(cell(columns.website), cell(columns.raw_website))
+            crawl_url = self._row_crawl_url(row, columns)
             leads.append(
                 EnrichmentLead(
                     index=i,
@@ -606,6 +621,10 @@ class NicheLeadEnricher(ABC, Generic[R]):
                 out_row[col] = val
             if res is not None and columns.existing_class is not None and columns.existing_class < len(out_row):
                 out_row[columns.existing_class] = self._decision_value(res)
+            if res is not None:
+                for col, val in self._input_column_values(res, columns).items():
+                    if val and col < len(out_row):
+                        out_row[col] = val
             return out_row
 
         def build_all_row(out_row: list[str], res: R | None) -> list[str]:

@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-11-27T09:29:28",
+  "classifier_version": "2026.11-cleaning-2",
+  "input_file": "Cleaning_Mode\\Cleaning Businesses.csv",
+  "output_dir": "Cleaning_Mode\\output\\test_first_10",
+  "totals": {
+    "input_rows": 10,
+    "exact_duplicate_rows_removed": 0,
+    "duplicate_groups": 0,
+    "rows_in_duplicate_groups": 0,
+    "duplicates_removed_from_qualified_sheet": 0,
+    "leads_classified": 10,
+    "qualified": 6,
+    "not_qualified": 2,
+    "uncertain": 0,
+    "unreachable": 2,
+    "qualification_rate_pct": 60.0,
+    "unique_websites": 9,
+    "websites_successfully_evaluated": 8,
+    "websites_requiring_verification": 2,
+    "websites_retried": 0,
+    "recovered_on_retry": 0,
+    "restored_from_checkpoint": 0,
+    "evaluated_via_archived_snapshot": 0
+  },
+  "output_files": {
+    "qualified_leads.csv": "Cleaning_Mode\\output\\test_first_10\\qualified_leads.csv",
+    "not_qualified_leads.csv": "Cleaning_Mode\\output\\test_first_10\\not_qualified_leads.csv",
+    "uncertain_leads.csv": "Cleaning_Mode\\output\\test_first_10\\uncertain_leads.csv",
+    "unreachable_leads.csv": "Cleaning_Mode\\output\\test_first_10\\unreachable_leads.csv",
+    "all_leads.csv": "Cleaning_Mode\\output\\test_first_10\\all_leads.csv",
+    "duplicates.csv": "Cleaning_Mode\\output\\test_first_10\\duplicates.csv",
+    "classification_report.csv": "Cleaning_Mode\\output\\test_first_10\\classification_report.csv"
+  },
+  "validation": {
+    "passed": true,
+    "leads_expected": 10,
+    "leads_placed": 10,
+    "missing_from_outputs": [],
+    "in_multiple_outputs": [],
+    "file_row_counts": {
+      "qualified_leads.csv": 6,
+      "not_qualified_leads.csv": 2,
+      "uncertain_leads.csv": 0,
+      "unreachable_leads.csv": 2
+    },
+    "file_count_mismatches": [],
+    "qualified_without_evidence": [],
+    "decision_column_filled": true,
+    "qualified_with_main_service": 6,
+    "main_service_single_value": true,
+    "no_services_on_rejected": true,
+    "low_confidence_for_review": 2,
+    "borderline_rows": 2,
+    "decided_from_name_only": 2,
+    "duplicates_sheet_rows": 0,
+    "duplicate_rows_share_verdict": true
+  },
+  "persistent_crawl_failures": [
+    {
+      "company": "Advantage Cleaning Services",
+      "url": "http://www.advantagecleaningalaska.com/",
+      "status": "DNS Failure",
+      "error": "http://www.advantagecleaningalaska.com/ -> DNS Failure (ConnectError: [Errno 11001] getaddrinfo failed) after 2 attempts; http://advantagecleaningalaska.com/ -> DNS Failure (ConnectError: [Errno 11001] getaddrinfo failed) after 2 attempts",
+      "rows": "1"
+    }
+  ],
+  "uncertain_cases": [],
+  "duration_seconds": 6.0
+}

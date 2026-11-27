@@ -429,6 +429,32 @@ def classify_auto_repair_command(
     )
 
 
+def classify_cleaning_command(
+    input_path: str = "Cleaning_Mode/Cleaning Businesses.csv",
+    output_dir: str | None = None,
+    limit: int | None = None,
+    concurrency: int = 8,
+    resume: bool = True,
+    timeout: float = 20.0,
+) -> None:
+    """Classify cleaning businesses (Is Cleaning Company? + Services + Main Service) from their websites."""
+    from contractor_scraper.orchestration.cleaning_enricher import CleaningLeadEnricher
+
+    settings = get_settings()
+    settings.ensure_directories()
+    setup_logging(log_level=settings.log_level, logs_dir=settings.logs_dir)
+
+    enricher = CleaningLeadEnricher(concurrency_limit=concurrency, timeout_seconds=timeout)
+    asyncio.run(
+        enricher.process_leads(
+            input_csv_path=input_path,
+            output_dir=output_dir,
+            limit=limit,
+            resume=resume,
+        )
+    )
+
+
 def christmas_sunbiz_command(
     output: str | None = None,
     years: list[int] | None = None,
